@@ -42,6 +42,8 @@ hacia cada nodo.
   hub con sus proyectos). Se alternan con un *toggle* en la cabecera.
 - 🔁 **Reordenar** — un botón cicla entre disposiciones ordenadas (Anillo, Espiral,
   Órbitas, Abanico); los nodos transicionan suavemente a su nueva posición.
+- 🔍 **Zoom** — controles +/− (y rueda del mouse) escalan toda la red para
+  despejar la pantalla cuando hay muchos proyectos o acercarse a un cluster.
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.

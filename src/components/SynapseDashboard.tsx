@@ -18,6 +18,13 @@ import { SynapseLink } from "./SynapseLink";
 import { LabelLayer } from "./LabelLayer";
 import { AddProjectForm } from "./AddProjectForm";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
+import { ZoomControls } from "./ZoomControls";
+
+const ZOOM_MIN = 0.4;
+const ZOOM_MAX = 1.6;
+const ZOOM_STEP = 0.15;
+const clampZoom = (z: number) =>
+  Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
 
 /**
  * Generates a URL-safe, collision-resistant id from a project name.
@@ -42,6 +49,7 @@ export function SynapseDashboard() {
   const [projects, setProjects] = useState<SynapseProject[]>(INITIAL_PROJECTS);
   const [view, setView] = useState<ViewMode>("giant");
   const [arrangement, setArrangement] = useState<Arrangement>("ring");
+  const [zoom, setZoom] = useState(1);
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
 
   const giant = useRadialLayout(projects, { width, height, arrangement });
@@ -65,6 +73,15 @@ export function SynapseDashboard() {
   };
 
   const activeCount = projects.filter((p) => p.active !== false).length;
+
+  const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
+  const zoomOut = () => setZoom((z) => clampZoom(z - ZOOM_STEP));
+  const resetZoom = () => setZoom(1);
+
+  // Wheel anywhere on the canvas adjusts zoom (the page itself never scrolls).
+  const handleWheel = (e: React.WheelEvent) => {
+    setZoom((z) => clampZoom(z - Math.sign(e.deltaY) * ZOOM_STEP));
+  };
 
   const cycleArrangement = () => {
     const i = ARRANGEMENTS.findIndex((a) => a.id === arrangement);
@@ -158,7 +175,14 @@ export function SynapseDashboard() {
       </header>
 
       {/* Canvas. */}
-      <div ref={canvasRef} className="absolute inset-0">
+      <div ref={canvasRef} className="absolute inset-0" onWheel={handleWheel}>
+        {/* Scalable network wrapper: zoom scales nodes, links and labels as one
+            so a dense portfolio can be shrunk to declutter the screen. */}
+        <motion.div
+          className="absolute inset-0 origin-center"
+          animate={{ scale: zoom }}
+          transition={{ type: "spring", stiffness: 200, damping: 26 }}
+        >
         {ready && view === "giant" && (
           <>
             {/* Synapses behind the DOM nodes. */}
@@ -252,8 +276,9 @@ export function SynapseDashboard() {
           </>
         )}
 
-        {/* Decluttered connection titles (never overlapping). */}
-        {ready && <LabelLayer labels={labels} />}
+          {/* Decluttered connection titles (never overlapping). */}
+          {ready && <LabelLayer labels={labels} />}
+        </motion.div>
 
         {/* Empty state. */}
         {ready && projects.length === 0 && (
@@ -261,6 +286,18 @@ export function SynapseDashboard() {
             No hay sinapsis activas. Conecta un proyecto para empezar.
           </div>
         )}
+      </div>
+
+      {/* Zoom controls. */}
+      <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
+        <ZoomControls
+          zoom={zoom}
+          min={ZOOM_MIN}
+          max={ZOOM_MAX}
+          onZoomIn={zoomIn}
+          onZoomOut={zoomOut}
+          onReset={resetZoom}
+        />
       </div>
 
       {/* Control panel. */}

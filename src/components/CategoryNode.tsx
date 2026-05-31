@@ -7,21 +7,34 @@ interface CategoryNodeProps {
   /** Number of projects in this category. */
   count: number;
   index: number;
+  /** Drill into this category (focus it as the central synapse). */
+  onFocus: () => void;
 }
 
 /**
  * A category hub in the "por categorías" view: a mid-sized glossy sphere tinted
  * with the category accent showing its project count. The category name is drawn
- * in the decluttered LabelLayer.
+ * in the decluttered LabelLayer. Clicking it focuses the category.
  */
-export function CategoryNode({ x, y, accent, count, index }: CategoryNodeProps) {
+export function CategoryNode({
+  x,
+  y,
+  accent,
+  count,
+  index,
+  onFocus,
+}: CategoryNodeProps) {
   return (
     <motion.div
-      className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+      className="pointer-events-auto absolute flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center"
       style={{ left: x, top: y }}
       initial={{ scale: 0, opacity: 0 }}
       animate={{ scale: 1, opacity: 1 }}
       exit={{ scale: 0, opacity: 0 }}
+      whileHover={{ scale: 1.12 }}
+      whileTap={{ scale: 0.95 }}
+      onClick={onFocus}
+      title="Analizar esta categoría"
       transition={{
         type: "spring",
         stiffness: 220,

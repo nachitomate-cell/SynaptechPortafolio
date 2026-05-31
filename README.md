@@ -40,6 +40,11 @@ hacia cada nodo.
 - 🔀 **Dos vistas** — *Sinapsis gigante* (todos los proyectos alrededor del núcleo)
   y *Por categorías* (clusters: el núcleo conecta con un hub por categoría y cada
   hub con sus proyectos). Se alternan con un *toggle* en la cabecera.
+- 🎯 **Analizar una categoría** — clic en una categoría la enfoca: pasa a ser la
+  *sinapsis central* y sus proyectos se conectan directamente a ella (con botón
+  para volver a todas las categorías).
+- ✋ **Arrastrar sinapsis** — cualquier nodo se puede tomar y separar del resto
+  para analizarlo individualmente; su conexión lo sigue (consciente del zoom).
 - 🔁 **Reordenar** — un botón cicla entre disposiciones ordenadas (Anillo, Espiral,
   Órbitas, Abanico); los nodos transicionan suavemente a su nueva posición.
 - 🔍 **Zoom** — controles +/− (y rueda del mouse) escalan toda la red para

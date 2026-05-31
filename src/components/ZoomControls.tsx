@@ -25,7 +25,7 @@ export function ZoomControls({
   const pct = Math.round(zoom * 100);
 
   return (
-    <div className="pointer-events-auto flex items-center gap-1 rounded-full border border-white/5 bg-zinc-900/60 p-1 backdrop-blur-md">
+    <div className="pointer-events-auto flex flex-col items-center gap-1 rounded-full border border-white/5 bg-zinc-900/60 p-1 backdrop-blur-md sm:flex-row">
       <motion.button
         onClick={onZoomOut}
         disabled={zoom <= min + 0.001}

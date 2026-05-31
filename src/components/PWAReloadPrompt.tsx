@@ -29,7 +29,7 @@ export function PWAReloadPrompt() {
           animate={{ opacity: 1, y: 0, scale: 1 }}
           exit={{ opacity: 0, y: 24, scale: 0.96 }}
           transition={{ type: "spring", stiffness: 300, damping: 24 }}
-          className="pointer-events-auto fixed bottom-6 right-6 z-30 w-72 rounded-2xl border border-white/5 bg-zinc-900/70 p-4 backdrop-blur-md"
+          className="pointer-events-auto fixed bottom-6 right-4 z-30 w-72 max-w-[calc(100vw-2rem)] rounded-2xl border border-white/5 bg-zinc-900/70 p-4 backdrop-blur-md sm:right-6"
           style={{ boxShadow: "0 0 24px rgba(146,200,58,0.18)" }}
         >
           <div className="flex items-start gap-3">

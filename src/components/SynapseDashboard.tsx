@@ -53,6 +53,7 @@ export function SynapseDashboard() {
   const [zoom, setZoom] = useState(1);
   const [focusedCategory, setFocusedCategory] = useState<string | null>(null);
   const [infoId, setInfoId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
@@ -224,29 +225,33 @@ export function SynapseDashboard() {
     ? projects.find((p) => p.id === infoId) ?? null
     : null;
 
+  const toggleSelect = (id: string) =>
+    setSelectedId((cur) => (cur === id ? null : id));
+
   // Shared props for every draggable project node.
   const nodeHandlers = {
     onDelete: deleteProject,
     onToggleActive: toggleActive,
     onInfo: setInfoId,
     onDragMove: moveNode,
+    onSelect: toggleSelect,
     zoom,
   };
 
   return (
     <div className="synapse-backdrop relative h-screen w-screen overflow-hidden">
       {/* Header. */}
-      <header className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between gap-4 p-6">
+      <header className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between gap-4 p-4 sm:p-6">
         <div>
-          <h1 className="text-lg font-semibold tracking-tight text-zinc-100">
+          <h1 className="text-base font-semibold tracking-tight text-zinc-100 sm:text-lg">
             Red Sináptica
           </h1>
-          <p className="text-xs font-light text-zinc-500">
+          <p className="hidden text-xs font-light text-zinc-500 sm:block">
             Portafolio de conexiones · SynapTech SpA
           </p>
         </div>
 
-        <div className="absolute left-1/2 top-6 flex -translate-x-1/2 flex-col items-center gap-2">
+        <div className="absolute left-1/2 top-16 flex -translate-x-1/2 flex-col items-center gap-2 sm:top-6">
           <ViewToggle value={view} onChange={changeView} />
           {view === "giant" && (
             <motion.button
@@ -283,17 +288,22 @@ export function SynapseDashboard() {
         </div>
 
         <div className="text-right">
-          <div className="text-2xl font-semibold text-lime-300">
+          <div className="text-xl font-semibold text-lime-300 sm:text-2xl">
             {projects.length}
           </div>
-          <div className="text-[11px] font-light uppercase tracking-widest text-zinc-500">
+          <div className="text-[10px] font-light uppercase tracking-widest text-zinc-500 sm:text-[11px]">
             Proyectos
           </div>
         </div>
       </header>
 
       {/* Canvas. */}
-      <div ref={canvasRef} className="absolute inset-0" onWheel={handleWheel}>
+      <div
+        ref={canvasRef}
+        className="absolute inset-0"
+        onWheel={handleWheel}
+        onClick={() => setSelectedId(null)}
+      >
         {/* Scalable network wrapper: zoom scales nodes, links and labels as one
             so a dense portfolio can be shrunk to declutter the screen. */}
         <motion.div
@@ -325,6 +335,7 @@ export function SynapseDashboard() {
                     node={node}
                     index={i}
                     accent={accentForCategory(node.category)}
+                    selected={selectedId === node.id}
                     {...nodeHandlers}
                   />
                 ))}
@@ -394,6 +405,7 @@ export function SynapseDashboard() {
                     node={node}
                     index={i}
                     accent={focusAccent}
+                    selected={selectedId === node.id}
                     {...nodeHandlers}
                   />
                 ))}
@@ -423,8 +435,8 @@ export function SynapseDashboard() {
         )}
       </div>
 
-      {/* Zoom controls. */}
-      <div className="absolute bottom-6 left-1/2 z-20 -translate-x-1/2">
+      {/* Zoom controls — right edge on phones, bottom-center on desktop. */}
+      <div className="absolute right-3 top-1/2 z-20 -translate-y-1/2 sm:bottom-6 sm:left-1/2 sm:right-auto sm:top-auto sm:-translate-x-1/2 sm:translate-y-0">
         <ZoomControls
           zoom={zoom}
           min={ZOOM_MIN}
@@ -436,7 +448,7 @@ export function SynapseDashboard() {
       </div>
 
       {/* Control panel. */}
-      <div className="absolute bottom-6 left-6 z-20">
+      <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
         <AddProjectForm onAdd={addProject} />
       </div>
 

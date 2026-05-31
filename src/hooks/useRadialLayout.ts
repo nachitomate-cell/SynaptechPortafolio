@@ -30,8 +30,11 @@ export function useRadialLayout(
   return useMemo(() => {
     const center = { x: width / 2, y: height / 2 };
     const minDimension = Math.min(width, height);
-    const maxRadius = Math.max(130, minDimension / 2 - 120);
-    const minRadius = Math.min(150, maxRadius * 0.55);
+    // Smaller label margin on phones so the network keeps a usable radius.
+    const isCompact = minDimension < 520;
+    const margin = isCompact ? 64 : 120;
+    const maxRadius = Math.max(88, minDimension / 2 - margin);
+    const minRadius = Math.min(maxRadius * 0.6, isCompact ? 60 : 150);
     const count = projects.length;
     const goldenAngle = Math.PI * (3 - Math.sqrt(5));
 

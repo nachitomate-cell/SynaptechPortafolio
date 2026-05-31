@@ -22,6 +22,7 @@ export function useCategoryLayout(
   return useMemo(() => {
     const center = { x: width / 2, y: height / 2 };
     const minDimension = Math.min(width, height);
+    const isCompact = minDimension < 520;
 
     // Group projects by category name, preserving first-seen order.
     const groups = new Map<string, SynapseProject[]>();
@@ -34,7 +35,10 @@ export function useCategoryLayout(
 
     const entries = [...groups.entries()];
     const hubCount = entries.length;
-    const hubRadius = Math.max(150, minDimension / 2 - 150);
+    const hubRadius = Math.max(
+      isCompact ? 96 : 150,
+      minDimension / 2 - (isCompact ? 90 : 150),
+    );
 
     const categories = entries.map(([name, members], index) => {
       const angle = (index / Math.max(hubCount, 1)) * Math.PI * 2 - Math.PI / 2;
@@ -43,8 +47,8 @@ export function useCategoryLayout(
 
       // Local orbit for this category's projects; grows a little with count.
       const projectRadius = Math.min(
-        110,
-        Math.max(64, 38 + members.length * 12),
+        isCompact ? 78 : 110,
+        Math.max(isCompact ? 52 : 64, 38 + members.length * 12),
       );
 
       const positionedProjects = members.map((project, i) => {

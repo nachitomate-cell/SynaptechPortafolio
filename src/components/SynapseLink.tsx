@@ -9,6 +9,10 @@ interface SynapseLinkProps {
   id: string;
   /** Stagger index so pulses along the network feel alive, not synchronized. */
   index: number;
+  /** Accent color of the synapse (defaults to brand green). */
+  color?: string;
+  /** Stroke width multiplier — use >1 for primary core→hub links. */
+  strength?: number;
 }
 
 /**
@@ -19,7 +23,14 @@ interface SynapseLinkProps {
  * The pulse is a short dash animated along the path via strokeDashoffset, with
  * `pathLength={1}` normalizing the geometry so the motion works on any curve.
  */
-export function SynapseLink({ from, to, id, index }: SynapseLinkProps) {
+export function SynapseLink({
+  from,
+  to,
+  id,
+  index,
+  color = "#a3d94a",
+  strength = 1,
+}: SynapseLinkProps) {
   // Build a quadratic bezier that bows out perpendicular to the radius, giving
   // the organic curved-synapse look from the brand guidelines.
   const dx = to.x - from.x;
@@ -51,11 +62,11 @@ export function SynapseLink({ from, to, id, index }: SynapseLinkProps) {
           x2={to.x}
           y2={to.y}
         >
-          <stop offset="0%" stopColor="#a3d94a" stopOpacity="0.6" />
-          <stop offset="100%" stopColor="#7bb22e" stopOpacity="0.12" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.6" />
+          <stop offset="100%" stopColor={color} stopOpacity="0.1" />
         </linearGradient>
 
-        {/* Moving pulse: a hot lime core that fades at both ends. */}
+        {/* Moving pulse: a hot core that fades at both ends. */}
         <linearGradient
           id={pulseId}
           gradientUnits="userSpaceOnUse"
@@ -64,9 +75,9 @@ export function SynapseLink({ from, to, id, index }: SynapseLinkProps) {
           x2={to.x}
           y2={to.y}
         >
-          <stop offset="0%" stopColor="#a3d94a" stopOpacity="0" />
-          <stop offset="50%" stopColor="#eaffc4" stopOpacity="1" />
-          <stop offset="100%" stopColor="#a3d94a" stopOpacity="0" />
+          <stop offset="0%" stopColor={color} stopOpacity="0" />
+          <stop offset="50%" stopColor="#f4ffe0" stopOpacity="1" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
       </defs>
 
@@ -75,7 +86,7 @@ export function SynapseLink({ from, to, id, index }: SynapseLinkProps) {
         d={d}
         fill="none"
         stroke={`url(#${gradientId})`}
-        strokeWidth={1.5}
+        strokeWidth={1.5 * strength}
         strokeLinecap="round"
       />
 
@@ -86,7 +97,7 @@ export function SynapseLink({ from, to, id, index }: SynapseLinkProps) {
         fill="none"
         pathLength={1}
         stroke={`url(#${pulseId})`}
-        strokeWidth={2.5}
+        strokeWidth={2.5 * strength}
         strokeLinecap="round"
         style={{ filter: "drop-shadow(0 0 4px rgba(146,200,58,0.9))" }}
         strokeDasharray="0.18 1"

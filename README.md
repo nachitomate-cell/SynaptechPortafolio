@@ -29,8 +29,15 @@ hacia cada nodo.
   un pulso luminoso que fluye desde el núcleo hacia el nodo periférico.
 - 🏷️ **Nodos periféricos** — esferas oscuras con borde lima; muestran el nombre del
   proyecto siempre y revelan la categoría al pasar el cursor (*hover*).
-- ➕ **Añadir sinapsis en vivo** — formulario para conectar nuevos proyectos (con
-  un botón ⚡ que genera uno de prueba al instante).
+- ➕ **Añadir sinapsis en vivo** — formulario con selector de categorías por
+  defecto (y un botón ⚡ que genera un proyecto de prueba al instante).
+- 🗑️ **Borrar sinapsis** — al pasar el cursor sobre un nodo aparece un control ✕
+  para desconectar el proyecto de la red.
+- 🔀 **Dos vistas** — *Sinapsis gigante* (todos los proyectos alrededor del núcleo)
+  y *Por categorías* (clusters: el núcleo conecta con un hub por categoría y cada
+  hub con sus proyectos). Se alternan con un *toggle* en la cabecera.
+- 🏷️ **Categorías por defecto** — Retail, Servicios, Educación, Salud, Gastronomía
+  y Tecnología, cada una con un acento dentro de la familia verde de marca.
 - 📐 **Layout radial responsivo** — los nodos se redistribuyen automáticamente
   según el tamaño del lienzo usando un `ResizeObserver`.
 - 📱 **PWA instalable** — manifest, iconos (incl. *maskable*), service worker con
@@ -62,16 +69,21 @@ npm run icons    # regenera los iconos PNG desde scripts/icon-source.svg
 src/
 ├── App.tsx
 ├── components/
-│   ├── SynapseDashboard.tsx   # orquestador: layout + render de la red
+│   ├── SynapseDashboard.tsx   # orquestador: vistas + render de la red
 │   ├── CentralNode.tsx        # núcleo SynapTech con glow neón
-│   ├── SynapseNode.tsx        # nodo periférico con label en hover
-│   ├── SynapseLink.tsx        # sinapsis SVG con pulso animado
+│   ├── CategoryNode.tsx       # hub de categoría (vista por categorías)
+│   ├── SynapseNode.tsx        # nodo periférico con label y borrado en hover
+│   ├── SynapseLink.tsx        # sinapsis SVG curva con pulso animado
+│   ├── ViewToggle.tsx         # toggle "gigante" / "por categorías"
 │   ├── AddProjectForm.tsx     # panel para añadir conexiones
 │   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
 ├── hooks/
-│   ├── useRadialLayout.ts     # posiciona los nodos en círculo
+│   ├── useRadialLayout.ts     # layout radial de la sinapsis gigante
+│   ├── useCategoryLayout.ts   # layout en clusters por categoría
 │   └── useElementSize.ts      # mide el lienzo para responsividad
-├── data/mockData.ts           # proyectos iniciales
+├── data/
+│   ├── mockData.ts            # proyectos iniciales
+│   └── categories.ts          # categorías por defecto + acentos
 └── types.ts
 
 scripts/

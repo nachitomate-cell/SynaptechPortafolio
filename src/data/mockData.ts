@@ -13,9 +13,5 @@ export const INITIAL_PROJECTS: SynapseProject[] = [
     category: "Educación",
   },
   { id: "diagnomed", name: "Diagnomed", category: "Salud" },
-  {
-    id: "vida-sana",
-    name: "Vida Sana",
-    category: "Minimarket",
-  },
+  { id: "vida-sana", name: "Vida Sana", category: "Retail" },
 ];

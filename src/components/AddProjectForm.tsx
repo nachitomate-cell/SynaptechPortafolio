@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
+import { DEFAULT_CATEGORIES } from "../data/categories";
 
 interface AddProjectFormProps {
   onAdd: (name: string, category: string) => void;
@@ -15,26 +16,30 @@ const SAMPLE_NAMES = [
 ];
 
 /**
- * Compact control panel to grow the network: type a project name (with an
- * optional category) and fire a new synapse, or use the dice for a quick demo.
+ * Compact control panel to grow the network: type a project name, pick one of
+ * the default categories, and fire a new synapse — or use the bolt for a quick
+ * randomized demo node.
  */
 export function AddProjectForm({ onAdd }: AddProjectFormProps) {
   const [name, setName] = useState("");
-  const [category, setCategory] = useState("");
+  const [category, setCategory] = useState(DEFAULT_CATEGORIES[0].name);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmed = name.trim();
     if (!trimmed) return;
-    onAdd(trimmed, category.trim() || "Proyecto");
+    onAdd(trimmed, category);
     setName("");
-    setCategory("");
   };
 
   const addRandom = () => {
-    const random =
+    const randomName =
       SAMPLE_NAMES[Math.floor(Math.random() * SAMPLE_NAMES.length)];
-    onAdd(`${random} ${Math.floor(Math.random() * 90 + 10)}`, "Demo");
+    const randomCat =
+      DEFAULT_CATEGORIES[
+        Math.floor(Math.random() * DEFAULT_CATEGORIES.length)
+      ].name;
+    onAdd(`${randomName} ${Math.floor(Math.random() * 90 + 10)}`, randomCat);
   };
 
   return (
@@ -53,12 +58,17 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
           placeholder="Nombre del proyecto"
           className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
         />
-        <input
+        <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          placeholder="Categoría (opcional)"
-          className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
-        />
+          className="w-full cursor-pointer rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors focus:border-lime-400/50"
+        >
+          {DEFAULT_CATEGORIES.map((c) => (
+            <option key={c.id} value={c.name} className="bg-zinc-900">
+              {c.name}
+            </option>
+          ))}
+        </select>
 
         <div className="mt-1 flex gap-2">
           <motion.button

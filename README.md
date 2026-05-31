@@ -32,7 +32,11 @@ hacia cada nodo.
 - ➕ **Añadir sinapsis en vivo** — formulario con selector de categorías por
   defecto (y un botón ⚡ que genera un proyecto de prueba al instante).
 - 🗑️ **Borrar sinapsis** — al pasar el cursor sobre un nodo aparece un control ✕
-  para desconectar el proyecto de la red.
+  para eliminar el proyecto de la red.
+- ⏻ **Apagar / encender sinapsis** — un control de encendido permite desactivar
+  proyectos que aún no están activos: el nodo se atenúa y su conexión se muestra
+  desconectada (línea punteada tenue, sin pulso). El núcleo cuenta solo las
+  sinapsis activas.
 - 🔀 **Dos vistas** — *Sinapsis gigante* (todos los proyectos alrededor del núcleo)
   y *Por categorías* (clusters: el núcleo conecta con un hub por categoría y cada
   hub con sus proyectos). Se alternan con un *toggle* en la cabecera.
@@ -51,8 +55,14 @@ hacia cada nodo.
 
 ## Datos iniciales
 
-La red se inicializa con proyectos reales: *Patio Curauma*, *Barbería Ferraza*,
-*Colegio Diego Thompson*, *Diagnomed* y *Vida Sana (Minimarket)*.
+La red se inicializa con el portafolio actual de SynapTech, agrupado por categoría:
+
+- **Patio Curauma** — Club Patio Curauma
+- **SaaS Multitenant** (producto propio) — Barbería Ferraza, Barbería Elegance,
+  Chameleon Barber Studio, Barbería D'Jones, Aura Salon
+- **Consultora Sonqollay** — SonqollayAPP, Base de datos Sonqollay, Extensión
+  Label Studio
+- **Restaurantes** — ToHome, Calipso Concón
 
 ## Desarrollo
 

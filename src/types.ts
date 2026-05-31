@@ -7,6 +7,11 @@ export interface SynapseProject {
   name: string;
   /** Optional short descriptor shown alongside the label. */
   category?: string;
+  /**
+   * Whether the project is active and connected. Inactive projects appear
+   * dimmed and disconnected from the network. Treated as active when omitted.
+   */
+  active?: boolean;
 }
 
 /**

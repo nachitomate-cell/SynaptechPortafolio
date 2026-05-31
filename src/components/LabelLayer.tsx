@@ -49,12 +49,18 @@ export function LabelLayer({ labels }: LabelLayerProps) {
           {l.emphasis ? (
             <span
               className="text-[11px] font-semibold uppercase tracking-wider"
-              style={{ color: l.color }}
+              style={{ color: l.color, opacity: l.dim ? 0.5 : 1 }}
             >
               {l.text}
             </span>
           ) : (
-            <span className="text-xs font-medium text-zinc-200">{l.text}</span>
+            <span
+              className={`text-xs font-medium ${
+                l.dim ? "text-zinc-500" : "text-zinc-200"
+              }`}
+            >
+              {l.text}
+            </span>
           )}
         </div>
       ))}

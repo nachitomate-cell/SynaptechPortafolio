@@ -56,6 +56,16 @@ export function SynapseDashboard() {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
 
+  const toggleActive = (id: string) => {
+    setProjects((prev) =>
+      prev.map((p) =>
+        p.id === id ? { ...p, active: p.active === false } : p,
+      ),
+    );
+  };
+
+  const activeCount = projects.filter((p) => p.active !== false).length;
+
   const cycleArrangement = () => {
     const i = ARRANGEMENTS.findIndex((a) => a.id === arrangement);
     setArrangement(ARRANGEMENTS[(i + 1) % ARRANGEMENTS.length].id);
@@ -75,6 +85,7 @@ export function SynapseDashboard() {
         dirX: n.x - center.x,
         dirY: n.y - center.y,
         color: accentForCategory(n.category),
+        dim: n.active === false,
       }));
     }
     return grouped.categories.flatMap((cat) => [
@@ -96,6 +107,7 @@ export function SynapseDashboard() {
         dirX: p.x - cat.x,
         dirY: p.y - cat.y,
         color: cat.accent,
+        dim: p.active === false,
       })),
     ]);
   }, [view, giant.nodes, grouped.categories, center.x, center.y]);
@@ -159,6 +171,7 @@ export function SynapseDashboard() {
                   from={center}
                   to={{ x: node.x, y: node.y }}
                   color={accentForCategory(node.category)}
+                  inactive={node.active === false}
                 />
               ))}
             </svg>
@@ -171,15 +184,12 @@ export function SynapseDashboard() {
                   index={i}
                   accent={accentForCategory(node.category)}
                   onDelete={deleteProject}
+                  onToggleActive={toggleActive}
                 />
               ))}
             </AnimatePresence>
 
-            <CentralNode
-              x={center.x}
-              y={center.y}
-              connections={projects.length}
-            />
+            <CentralNode x={center.x} y={center.y} connections={activeCount} />
           </>
         )}
 
@@ -206,6 +216,7 @@ export function SynapseDashboard() {
                       from={{ x: cat.x, y: cat.y }}
                       to={{ x: p.x, y: p.y }}
                       color={cat.accent}
+                      inactive={p.active === false}
                     />
                   ))}
                 </g>
@@ -220,7 +231,7 @@ export function SynapseDashboard() {
                   x={cat.x}
                   y={cat.y}
                   accent={cat.accent}
-                  count={cat.projects.length}
+                  count={cat.projects.filter((p) => p.active !== false).length}
                 />
               ))}
               {grouped.categories.flatMap((cat) =>
@@ -231,16 +242,13 @@ export function SynapseDashboard() {
                     index={j}
                     accent={cat.accent}
                     onDelete={deleteProject}
+                    onToggleActive={toggleActive}
                   />
                 )),
               )}
             </AnimatePresence>
 
-            <CentralNode
-              x={center.x}
-              y={center.y}
-              connections={projects.length}
-            />
+            <CentralNode x={center.x} y={center.y} connections={activeCount} />
           </>
         )}
 

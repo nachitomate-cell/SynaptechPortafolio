@@ -14,6 +14,8 @@ export interface RawLabel {
   color: string;
   /** Category hubs render bolder/uppercase and sit a touch further out. */
   emphasis?: boolean;
+  /** Inactive projects render dimmed. */
+  dim?: boolean;
 }
 
 /** A label after placement + overlap resolution. */
@@ -22,6 +24,7 @@ export interface PlacedLabel {
   text: string;
   color: string;
   emphasis: boolean;
+  dim: boolean;
   /** The node the label belongs to (leader-line origin). */
   nodeX: number;
   nodeY: number;
@@ -113,6 +116,7 @@ export function useLabelDeclutter(
         text: p.raw.text,
         color: p.raw.color,
         emphasis: !!p.raw.emphasis,
+        dim: !!p.raw.dim,
         nodeX: p.raw.x,
         nodeY: p.raw.y,
         lx: p.ax,

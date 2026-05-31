@@ -13,6 +13,8 @@ interface SynapseLinkProps {
   color?: string;
   /** Stroke width multiplier — use >1 for primary core→hub links. */
   strength?: number;
+  /** Inactive projects render as a faint dashed line with no pulse. */
+  inactive?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ export function SynapseLink({
   index,
   color = "#a3d94a",
   strength = 1,
+  inactive = false,
 }: SynapseLinkProps) {
   // Build a quadratic bezier that bows out perpendicular to the radius, giving
   // the organic curved-synapse look from the brand guidelines.
@@ -49,6 +52,21 @@ export function SynapseLink({
 
   const gradientId = `synapse-grad-${id}`;
   const pulseId = `synapse-pulse-${id}`;
+
+  // Disconnected synapse: a faint, static dashed trace with no travelling pulse.
+  if (inactive) {
+    return (
+      <path
+        d={d}
+        fill="none"
+        stroke="#52525b"
+        strokeOpacity={0.45}
+        strokeWidth={1.2}
+        strokeLinecap="round"
+        strokeDasharray="3 7"
+      />
+    );
+  }
 
   return (
     <g>

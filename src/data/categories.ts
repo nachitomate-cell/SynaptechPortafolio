@@ -1,7 +1,7 @@
 /**
- * Default project categories for SynapTech SpA. Each category carries an accent
- * within the brand's green family so the "por categorías" view can distinguish
- * clusters while staying on-brand.
+ * Project categories for SynapTech SpA, mirroring the real portfolio groupings.
+ * Each category carries an accent within the brand's green family so the "por
+ * categorías" view can distinguish clusters while staying on-brand.
  */
 export interface Category {
   id: string;
@@ -11,12 +11,10 @@ export interface Category {
 }
 
 export const DEFAULT_CATEGORIES: Category[] = [
-  { id: "retail", name: "Retail", accent: "#92c83a" },
-  { id: "servicios", name: "Servicios", accent: "#5fb37a" },
-  { id: "educacion", name: "Educación", accent: "#b6d94a" },
-  { id: "salud", name: "Salud", accent: "#3fb58a" },
-  { id: "gastronomia", name: "Gastronomía", accent: "#c9d83a" },
-  { id: "tecnologia", name: "Tecnología", accent: "#6ec83a" },
+  { id: "patio-curauma", name: "Patio Curauma", accent: "#92c83a" },
+  { id: "saas-multitenant", name: "SaaS Multitenant", accent: "#6ec83a" },
+  { id: "consultora-sonqollay", name: "Consultora Sonqollay", accent: "#3fb58a" },
+  { id: "restaurantes", name: "Restaurantes", accent: "#c9d83a" },
 ];
 
 /** Brand green, used as a fallback for categories outside the defaults. */

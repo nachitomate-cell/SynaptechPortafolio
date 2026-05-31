@@ -8,54 +8,70 @@ interface SynapseNodeProps {
   index: number;
   /** Remove this synapse from the network. */
   onDelete: (id: string) => void;
+  /** Toggle the project's active (connected) state. */
+  onToggleActive: (id: string) => void;
   /** Accent color for the rim/glow (defaults to brand green). */
   accent?: string;
 }
 
+const INACTIVE_COLOR = "#52525b";
+
 /**
  * A peripheral project node: a glossy dark sphere ringed in the accent color —
  * echoing the SynapTech "data synapse" nodes. Its title is rendered separately
- * in the decluttered LabelLayer; hovering brightens the node and exposes a
- * delete control to disconnect the synapse.
+ * in the decluttered LabelLayer. Hovering exposes controls to power the synapse
+ * on/off (disconnect inactive projects) and to delete it.
  */
 export function SynapseNode({
   node,
   index,
   onDelete,
+  onToggleActive,
   accent = "#a3d94a",
 }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
+
+  const active = node.active !== false;
+  const color = active ? accent : INACTIVE_COLOR;
 
   return (
     <motion.div
       className="group absolute flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center"
       initial={{ scale: 0, opacity: 0, left: node.x, top: node.y }}
-      animate={{ scale: 1, opacity: 1, left: node.x, top: node.y }}
+      animate={{
+        scale: 1,
+        opacity: active ? 1 : 0.55,
+        left: node.x,
+        top: node.y,
+      }}
       exit={{ scale: 0, opacity: 0 }}
       transition={{
         scale: { type: "spring", stiffness: 260, damping: 18, delay: index * 0.04 },
-        opacity: { duration: 0.3, delay: index * 0.04 },
+        opacity: { duration: 0.3 },
         left: { type: "spring", stiffness: 120, damping: 20 },
         top: { type: "spring", stiffness: 120, damping: 20 },
       }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
     >
-      {/* Idle floating so the network feels organic. */}
+      {/* Idle floating so the network feels organic (paused when inactive). */}
       <motion.div
         className="relative flex flex-col items-center"
-        animate={{ y: [0, -4, 0] }}
+        animate={active ? { y: [0, -4, 0] } : { y: 0 }}
         transition={{
           duration: 3 + (index % 4) * 0.4,
-          repeat: Infinity,
+          repeat: active ? Infinity : 0,
           ease: "easeInOut",
         }}
       >
-        {/* Accent glow aura, intensifies on hover. */}
+        {/* Accent glow aura, intensifies on hover (dim when inactive). */}
         <motion.div
           className="absolute h-10 w-10 rounded-full blur-md"
-          style={{ backgroundColor: accent }}
-          animate={{ scale: hovered ? 1.6 : 1, opacity: hovered ? 0.55 : 0.28 }}
+          style={{ backgroundColor: color }}
+          animate={{
+            scale: hovered ? 1.6 : 1,
+            opacity: active ? (hovered ? 0.55 : 0.28) : 0.12,
+          }}
           transition={{ duration: 0.3 }}
         />
 
@@ -65,8 +81,8 @@ export function SynapseNode({
           style={{
             background:
               "radial-gradient(circle at 35% 30%, #2c2c30 0%, #141417 60%, #070708 100%)",
-            boxShadow: `0 0 10px ${accent}`,
-            border: `2px solid ${accent}`,
+            boxShadow: active ? `0 0 10px ${color}` : "none",
+            border: `2px solid ${color}`,
           }}
           animate={{ scale: hovered ? 1.4 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
@@ -75,10 +91,35 @@ export function SynapseNode({
           <span className="pointer-events-none absolute left-1/2 top-0.5 h-1 w-1.5 -translate-x-1/2 rounded-full bg-white/40 blur-[1px]" />
         </motion.div>
 
-        {/* Delete control — appears on hover above the node. */}
+        {/* Power toggle — appears on hover at the top-left. */}
+        <motion.button
+          type="button"
+          aria-label={`${active ? "Desactivar" : "Activar"} sinapsis ${node.name}`}
+          title={active ? "Desactivar (desconectar)" : "Activar (conectar)"}
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleActive(node.id);
+          }}
+          initial={false}
+          animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.6 }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            pointerEvents: hovered ? "auto" : "none",
+            color: active ? accent : "#a1a1aa",
+            borderColor: active ? `${accent}66` : "#3f3f46",
+          }}
+          className="absolute -left-3.5 -top-3.5 flex h-5 w-5 items-center justify-center rounded-full border bg-zinc-900/90 text-[10px] leading-none backdrop-blur-sm"
+        >
+          ⏻
+        </motion.button>
+
+        {/* Delete control — appears on hover at the top-right. */}
         <motion.button
           type="button"
           aria-label={`Borrar sinapsis ${node.name}`}
+          title="Borrar"
           onClick={(e) => {
             e.stopPropagation();
             onDelete(node.id);

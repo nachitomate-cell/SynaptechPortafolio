@@ -59,6 +59,11 @@ hacia cada nodo.
   repo) se guarda en `localStorage` vía un store de Zustand, así que sobrevive a
   recargas. El backend de persistencia está encapsulado en `store/projectStore.ts`
   y puede cambiarse por una API remota sin tocar la UI.
+- 🔗 **Importar de GitHub** — conecta tu cuenta por usuario y lista tus repos
+  públicos; eliges con un check cuáles entran como sinapsis (activas) y a qué
+  categoría va cada uno. Client-side puro (API pública de GitHub, sin backend);
+  evita duplicados y precarga el link del repo. Botón "Restablecer portafolio"
+  para volver a la semilla.
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.

@@ -14,6 +14,10 @@ import { INITIAL_PROJECTS } from "../data/mockData";
 interface ProjectState {
   projects: SynapseProject[];
   addProject: (name: string, category: string) => void;
+  /** Bulk-import projects (e.g. from GitHub); skips repos already present. */
+  importProjects: (
+    items: { name: string; category: string; repoUrl: string }[],
+  ) => void;
   deleteProject: (id: string) => void;
   toggleActive: (id: string) => void;
   updateProject: (id: string, patch: Partial<SynapseProject>) => void;
@@ -39,6 +43,23 @@ export const useProjectStore = create<ProjectState>()(
         set((s) => ({
           projects: [...s.projects, { id: makeId(name), name, category }],
         })),
+
+      importProjects: (items) =>
+        set((s) => {
+          const existing = new Set(
+            s.projects.map((p) => p.repoUrl).filter(Boolean),
+          );
+          const toAdd = items
+            .filter((i) => !existing.has(i.repoUrl))
+            .map((i) => ({
+              id: makeId(i.name),
+              name: i.name,
+              category: i.category,
+              repoUrl: i.repoUrl,
+              active: true,
+            }));
+          return { projects: [...s.projects, ...toAdd] };
+        }),
 
       deleteProject: (id) =>
         set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),

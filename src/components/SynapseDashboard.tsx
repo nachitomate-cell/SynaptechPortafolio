@@ -20,6 +20,7 @@ import { AddProjectForm } from "./AddProjectForm";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
 import { ZoomControls } from "./ZoomControls";
 import { ProjectInfoModal } from "./ProjectInfoModal";
+import { GitHubImportModal } from "./GitHubImportModal";
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
@@ -43,6 +44,7 @@ export function SynapseDashboard() {
   const deleteProject = useProjectStore((s) => s.deleteProject);
   const toggleActive = useProjectStore((s) => s.toggleActive);
   const updateProject = useProjectStore((s) => s.updateProject);
+  const importProjects = useProjectStore((s) => s.importProjects);
   const resetProjects = useProjectStore((s) => s.resetProjects);
 
   const [view, setView] = useState<ViewMode>("giant");
@@ -51,6 +53,7 @@ export function SynapseDashboard() {
   const [focusedCategory, setFocusedCategory] = useState<string | null>(null);
   const [infoId, setInfoId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [showImport, setShowImport] = useState(false);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
@@ -450,8 +453,22 @@ export function SynapseDashboard() {
 
       {/* Control panel. */}
       <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
-        <AddProjectForm onAdd={addProject} onReset={handleReset} />
+        <AddProjectForm
+          onAdd={addProject}
+          onReset={handleReset}
+          onOpenImport={() => setShowImport(true)}
+        />
       </div>
+
+      {/* GitHub import module. */}
+      <GitHubImportModal
+        open={showImport}
+        existingRepoUrls={
+          new Set(projects.map((p) => p.repoUrl).filter(Boolean) as string[])
+        }
+        onClose={() => setShowImport(false)}
+        onImport={importProjects}
+      />
 
       {/* Project info module. */}
       <ProjectInfoModal

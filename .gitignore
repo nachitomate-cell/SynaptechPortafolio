@@ -9,6 +9,9 @@ dist-ssr
 vite.config.js
 vite.config.d.ts
 
+# vite-plugin-pwa dev artifacts
+dev-dist
+
 # Logs
 logs
 *.log

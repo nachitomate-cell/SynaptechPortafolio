@@ -12,6 +12,7 @@ hacia cada nodo.
 - **Vite** como bundler / dev server
 - **Tailwind CSS** (tema *premium dark*)
 - **Framer Motion** + **SVG** para las animaciones y los trazos sinápticos
+- **vite-plugin-pwa** (Workbox) — la app es una **PWA** instalable y offline-first
 
 > Se eligió el enfoque **Framer Motion + SVG** (en lugar de una librería de
 > grafos) por el control total que ofrece sobre el efecto de pulso neón viajando
@@ -30,6 +31,9 @@ hacia cada nodo.
   un botón ⚡ que genera uno de prueba al instante).
 - 📐 **Layout radial responsivo** — los nodos se redistribuyen automáticamente
   según el tamaño del lienzo usando un `ResizeObserver`.
+- 📱 **PWA instalable** — manifest, iconos (incl. *maskable*), service worker con
+  precache del *app shell* y de las fuentes; funciona sin conexión y avisa
+  cuando hay una nueva versión disponible.
 
 ## Datos iniciales
 
@@ -40,10 +44,15 @@ La red se inicializa con proyectos reales: *Patio Curauma*, *Barbería Ferraza*,
 
 ```bash
 npm install
-npm run dev      # servidor de desarrollo (Vite)
-npm run build    # build de producción
+npm run dev      # servidor de desarrollo (Vite, con service worker activo)
+npm run build    # build de producción (genera sw.js + manifest)
+npm run preview  # sirve el build (recomendado para probar la PWA)
 npm run lint     # chequeo de tipos (tsc --noEmit)
+npm run icons    # regenera los iconos PNG desde scripts/icon-source.svg
 ```
+
+> Para verificar la instalación/offline, usa `npm run build && npm run preview`
+> y abre las DevTools → *Application* → *Manifest* / *Service Workers*.
 
 ## Estructura
 
@@ -55,10 +64,15 @@ src/
 │   ├── CentralNode.tsx        # núcleo SynapTech con glow neón
 │   ├── SynapseNode.tsx        # nodo periférico con label en hover
 │   ├── SynapseLink.tsx        # sinapsis SVG con pulso animado
-│   └── AddProjectForm.tsx     # panel para añadir conexiones
+│   ├── AddProjectForm.tsx     # panel para añadir conexiones
+│   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
 ├── hooks/
 │   ├── useRadialLayout.ts     # posiciona los nodos en círculo
 │   └── useElementSize.ts      # mide el lienzo para responsividad
 ├── data/mockData.ts           # proyectos iniciales
 └── types.ts
+
+scripts/
+├── icon-source.svg            # icono maestro de la red sináptica
+└── generate-icons.mjs         # genera los PNG del manifest (npm run icons)
 ```

@@ -55,6 +55,10 @@ hacia cada nodo.
 - 📱 **Responsivo / táctil** — layout adaptado a teléfono (paneles compactos y
   reposicionados, formulario plegable, zoom vertical). En táctil los controles
   del nodo se abren al tocarlo (no hay hover) y el arrastre funciona con el dedo.
+- 💾 **Persistencia** — el portafolio (proyectos, estados, descripciones y links de
+  repo) se guarda en `localStorage` vía un store de Zustand, así que sobrevive a
+  recargas. El backend de persistencia está encapsulado en `store/projectStore.ts`
+  y puede cambiarse por una API remota sin tocar la UI.
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.
@@ -112,8 +116,9 @@ src/
 │   ├── useLabelDeclutter.ts   # anti-solapamiento de etiquetas
 │   └── useElementSize.ts      # mide el lienzo para responsividad
 ├── lib/measureText.ts         # medición de texto (canvas, cacheada)
+├── store/projectStore.ts      # estado de dominio (Zustand) + persistencia
 ├── data/
-│   ├── mockData.ts            # proyectos iniciales
+│   ├── mockData.ts            # proyectos iniciales (semilla)
 │   └── categories.ts          # categorías por defecto + acentos
 └── types.ts
 

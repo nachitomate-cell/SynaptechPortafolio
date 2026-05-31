@@ -83,21 +83,25 @@ export function SynapseNode({
 
   return (
     <motion.div
-      className="group absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
+      className="group absolute left-0 top-0 flex flex-col items-center"
+      // Position via transform (x/y) instead of left/top so updates never
+      // trigger layout reflow; the prepended translate keeps the node centered
+      // on its coordinate.
+      transformTemplate={(_, generated) => `translate(-50%, -50%) ${generated}`}
       onClick={(e) => e.stopPropagation()}
-      initial={{ scale: 0, opacity: 0, left: node.x, top: node.y }}
+      initial={{ scale: 0, opacity: 0, x: node.x, y: node.y }}
       animate={{
         scale: 1,
         opacity: active ? 1 : 0.55,
-        left: node.x,
-        top: node.y,
+        x: node.x,
+        y: node.y,
       }}
       exit={{ scale: 0, opacity: 0 }}
       transition={{
         scale: { type: "spring", stiffness: 260, damping: 18, delay: index * 0.04 },
         opacity: { duration: 0.3 },
-        left: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
-        top: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
+        x: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
+        y: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
       }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}

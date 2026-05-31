@@ -1,7 +1,7 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import type { PositionedProject, SynapseProject } from "../types";
-import { INITIAL_PROJECTS } from "../data/mockData";
+import type { PositionedProject } from "../types";
+import { useProjectStore } from "../store/projectStore";
 import { accentForCategory } from "../data/categories";
 import { useElementSize } from "../hooks/useElementSize";
 import {
@@ -29,16 +29,6 @@ const clampZoom = (z: number) =>
 
 type Overrides = Record<string, { x: number; y: number }>;
 
-/** Generates a URL-safe, collision-resistant id from a project name. */
-function makeId(name: string): string {
-  const slug = name
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/(^-|-$)/g, "");
-  return `${slug || "proyecto"}-${Math.random().toString(36).slice(2, 7)}`;
-}
-
 /**
  * Interactive synaptic dashboard for SynapTech SpA. A glowing core sits at the
  * center; every project radiates outward as a node connected by an animated
@@ -47,7 +37,13 @@ function makeId(name: string): string {
  * ordered arrangements, zoom, and a decluttered (non-overlapping) label layer.
  */
 export function SynapseDashboard() {
-  const [projects, setProjects] = useState<SynapseProject[]>(INITIAL_PROJECTS);
+  // Domain state (persisted) lives in the store; view state stays local.
+  const projects = useProjectStore((s) => s.projects);
+  const addProject = useProjectStore((s) => s.addProject);
+  const deleteProject = useProjectStore((s) => s.deleteProject);
+  const toggleActive = useProjectStore((s) => s.toggleActive);
+  const updateProject = useProjectStore((s) => s.updateProject);
+
   const [view, setView] = useState<ViewMode>("giant");
   const [arrangement, setArrangement] = useState<Arrangement>("ring");
   const [zoom, setZoom] = useState(1);
@@ -56,6 +52,9 @@ export function SynapseDashboard() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
+  // While true, the label declutter does cheap placement only (perf during drag).
+  const [draggingActive, setDraggingActive] = useState(false);
+  const dragTimer = useRef<ReturnType<typeof setTimeout>>();
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
 
   const giant = useRadialLayout(projects, { width, height, arrangement });
@@ -121,28 +120,17 @@ export function SynapseDashboard() {
     setOverrides({});
   }, [view, arrangement, focusedCategory, width, height]);
 
-  const addProject = (name: string, category: string) => {
-    setProjects((prev) => [...prev, { id: makeId(name), name, category }]);
-  };
-  const deleteProject = (id: string) => {
-    setProjects((prev) => prev.filter((p) => p.id !== id));
-  };
-  const toggleActive = (id: string) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, active: p.active === false } : p)),
-    );
-  };
-  const updateProject = (id: string, patch: Partial<SynapseProject>) => {
-    setProjects((prev) =>
-      prev.map((p) => (p.id === id ? { ...p, ...patch } : p)),
-    );
-  };
   const moveNode = (id: string, dx: number, dy: number) => {
     setOverrides((prev) => {
       const cur = prev[id] ?? basePos.get(id);
       if (!cur) return prev;
       return { ...prev, [id]: { x: cur.x + dx, y: cur.y + dy } };
     });
+    // Mark a drag in progress; clears shortly after the last move so the full
+    // (expensive) label declutter only runs once the node settles.
+    setDraggingActive(true);
+    if (dragTimer.current) clearTimeout(dragTimer.current);
+    dragTimer.current = setTimeout(() => setDraggingActive(false), 180);
   };
 
   const changeView = (v: ViewMode) => {
@@ -217,7 +205,11 @@ export function SynapseDashboard() {
     center.y,
   ]);
 
-  const labels = useLabelDeclutter(rawLabels, { width, height });
+  const labels = useLabelDeclutter(
+    rawLabels,
+    { width, height },
+    draggingActive,
+  );
 
   const ready = width > 0 && height > 0;
 

@@ -52,6 +52,11 @@ const PASSES = 90;
 export function useLabelDeclutter(
   labels: RawLabel[],
   size: { width: number; height: number },
+  /**
+   * Skip the O(n²) separation pass (e.g. while dragging): labels still follow
+   * their nodes via cheap radial placement, but transient overlaps are allowed.
+   */
+  skipSeparation = false,
 ): PlacedLabel[] {
   return useMemo(() => {
     if (size.width === 0 || size.height === 0 || labels.length === 0) return [];
@@ -89,7 +94,7 @@ export function useLabelDeclutter(
     });
 
     // Iterative vertical separation between labels whose X extents overlap.
-    for (let pass = 0; pass < PASSES; pass++) {
+    for (let pass = 0; !skipSeparation && pass < PASSES; pass++) {
       for (let i = 0; i < placed.length; i++) {
         for (let j = i + 1; j < placed.length; j++) {
           const a = placed[i];
@@ -125,5 +130,5 @@ export function useLabelDeclutter(
         displaced: Math.abs(cy - p.baseY) > 5,
       } satisfies PlacedLabel;
     });
-  }, [labels, size.width, size.height]);
+  }, [labels, size.width, size.height, skipSeparation]);
 }

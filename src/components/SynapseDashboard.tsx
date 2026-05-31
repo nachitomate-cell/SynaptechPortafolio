@@ -19,6 +19,7 @@ import { LabelLayer } from "./LabelLayer";
 import { AddProjectForm } from "./AddProjectForm";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
 import { ZoomControls } from "./ZoomControls";
+import { ProjectInfoModal } from "./ProjectInfoModal";
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
@@ -51,6 +52,7 @@ export function SynapseDashboard() {
   const [arrangement, setArrangement] = useState<Arrangement>("ring");
   const [zoom, setZoom] = useState(1);
   const [focusedCategory, setFocusedCategory] = useState<string | null>(null);
+  const [infoId, setInfoId] = useState<string | null>(null);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
@@ -127,6 +129,11 @@ export function SynapseDashboard() {
   const toggleActive = (id: string) => {
     setProjects((prev) =>
       prev.map((p) => (p.id === id ? { ...p, active: p.active === false } : p)),
+    );
+  };
+  const updateProject = (id: string, patch: Partial<SynapseProject>) => {
+    setProjects((prev) =>
+      prev.map((p) => (p.id === id ? { ...p, ...patch } : p)),
     );
   };
   const moveNode = (id: string, dx: number, dy: number) => {
@@ -213,10 +220,15 @@ export function SynapseDashboard() {
 
   const ready = width > 0 && height > 0;
 
+  const infoProject = infoId
+    ? projects.find((p) => p.id === infoId) ?? null
+    : null;
+
   // Shared props for every draggable project node.
   const nodeHandlers = {
     onDelete: deleteProject,
     onToggleActive: toggleActive,
+    onInfo: setInfoId,
     onDragMove: moveNode,
     zoom,
   };
@@ -427,6 +439,17 @@ export function SynapseDashboard() {
       <div className="absolute bottom-6 left-6 z-20">
         <AddProjectForm onAdd={addProject} />
       </div>
+
+      {/* Project info module. */}
+      <ProjectInfoModal
+        project={infoProject}
+        accent={accentForCategory(infoProject?.category)}
+        onClose={() => setInfoId(null)}
+        onRepoChange={(id, url) => updateProject(id, { repoUrl: url })}
+        onDescriptionChange={(id, text) =>
+          updateProject(id, { description: text })
+        }
+      />
     </div>
   );
 }

@@ -10,6 +10,8 @@ interface SynapseNodeProps {
   onDelete: (id: string) => void;
   /** Toggle the project's active (connected) state. */
   onToggleActive: (id: string) => void;
+  /** Open the project info module. */
+  onInfo: (id: string) => void;
   /** Drag the node by a canvas-space delta (already zoom-corrected upstream). */
   onDragMove: (id: string, dx: number, dy: number) => void;
   /** Current zoom, so drag deltas map 1:1 to the cursor. */
@@ -31,6 +33,7 @@ export function SynapseNode({
   index,
   onDelete,
   onToggleActive,
+  onInfo,
   onDragMove,
   zoom,
   accent = "#a3d94a",
@@ -165,6 +168,30 @@ export function SynapseNode({
           className="absolute -right-3.5 -top-3.5 flex h-5 w-5 items-center justify-center rounded-full border border-red-400/40 bg-zinc-900/90 text-[11px] leading-none text-red-300 backdrop-blur-sm hover:border-red-400 hover:text-red-200"
         >
           ✕
+        </motion.button>
+
+        {/* Info control — appears on hover at the bottom-right. */}
+        <motion.button
+          type="button"
+          aria-label={`Información de ${node.name}`}
+          title="Ver información"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInfo(node.id);
+          }}
+          initial={false}
+          animate={{ opacity: hovered ? 1 : 0, scale: hovered ? 1 : 0.6 }}
+          whileHover={{ scale: 1.15 }}
+          whileTap={{ scale: 0.9 }}
+          transition={{ duration: 0.15 }}
+          style={{
+            pointerEvents: hovered ? "auto" : "none",
+            color: accent,
+            borderColor: `${accent}66`,
+          }}
+          className="absolute -bottom-3.5 -right-3.5 flex h-5 w-5 items-center justify-center rounded-full border bg-zinc-900/90 text-[11px] font-semibold leading-none backdrop-blur-sm"
+        >
+          i
         </motion.button>
       </motion.div>
     </motion.div>

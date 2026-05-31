@@ -12,6 +12,10 @@ export interface SynapseProject {
    * dimmed and disconnected from the network. Treated as active when omitted.
    */
   active?: boolean;
+  /** URL of the related GitHub repository, shown in the info modal. */
+  repoUrl?: string;
+  /** Optional short description shown in the info modal. */
+  description?: string;
 }
 
 /**

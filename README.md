@@ -45,6 +45,9 @@ hacia cada nodo.
   para volver a todas las categorías).
 - ✋ **Arrastrar sinapsis** — cualquier nodo se puede tomar y separar del resto
   para analizarlo individualmente; su conexión lo sigue (consciente del zoom).
+- ℹ️ **Módulo de información** — un botón en cada nodo abre un modal con los datos
+  del proyecto y el **link de su repositorio de GitHub** (editable; se abre en una
+  pestaña nueva). Cierra con la X, clic fuera o Escape.
 - 🔁 **Reordenar** — un botón cicla entre disposiciones ordenadas (Anillo, Espiral,
   Órbitas, Abanico); los nodos transicionan suavemente a su nueva posición.
 - 🔍 **Zoom** — controles +/− (y rueda del mouse) escalan toda la red para

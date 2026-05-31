@@ -43,6 +43,7 @@ export function SynapseDashboard() {
   const deleteProject = useProjectStore((s) => s.deleteProject);
   const toggleActive = useProjectStore((s) => s.toggleActive);
   const updateProject = useProjectStore((s) => s.updateProject);
+  const resetProjects = useProjectStore((s) => s.resetProjects);
 
   const [view, setView] = useState<ViewMode>("giant");
   const [arrangement, setArrangement] = useState<Arrangement>("ring");
@@ -136,6 +137,14 @@ export function SynapseDashboard() {
   const changeView = (v: ViewMode) => {
     setView(v);
     if (v !== "categories") setFocusedCategory(null);
+  };
+
+  const handleReset = () => {
+    resetProjects();
+    setSelectedId(null);
+    setInfoId(null);
+    setFocusedCategory(null);
+    setOverrides({});
   };
 
   const activeCount = projects.filter((p) => p.active !== false).length;
@@ -441,7 +450,7 @@ export function SynapseDashboard() {
 
       {/* Control panel. */}
       <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
-        <AddProjectForm onAdd={addProject} />
+        <AddProjectForm onAdd={addProject} onReset={handleReset} />
       </div>
 
       {/* Project info module. */}

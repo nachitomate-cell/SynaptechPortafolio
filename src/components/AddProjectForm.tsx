@@ -4,6 +4,8 @@ import { DEFAULT_CATEGORIES } from "../data/categories";
 
 interface AddProjectFormProps {
   onAdd: (name: string, category: string) => void;
+  /** Restore the portfolio to its seeded defaults. */
+  onReset: () => void;
 }
 
 const SAMPLE_NAMES = [
@@ -25,10 +27,11 @@ const isDesktop = () =>
  * desktop and collapsed on phones (to keep the canvas clear); the header toggles
  * it. Pick a default category, name the project, and fire a new synapse.
  */
-export function AddProjectForm({ onAdd }: AddProjectFormProps) {
+export function AddProjectForm({ onAdd, onReset }: AddProjectFormProps) {
   const [name, setName] = useState("");
   const [category, setCategory] = useState(DEFAULT_CATEGORIES[0].name);
   const [open, setOpen] = useState(isDesktop);
+  const [confirmingReset, setConfirmingReset] = useState(false);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -130,6 +133,40 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
                 </motion.button>
               </div>
             </form>
+
+            {/* Reset to seeded defaults (with inline confirmation). */}
+            <div className="border-t border-white/5 px-4 py-2.5">
+              {confirmingReset ? (
+                <div className="flex items-center justify-between gap-2 text-[11px]">
+                  <span className="text-zinc-400">¿Restablecer todo?</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => {
+                        onReset();
+                        setConfirmingReset(false);
+                      }}
+                      className="rounded-md bg-red-500/80 px-2 py-1 font-medium text-white transition-colors hover:bg-red-500"
+                    >
+                      Sí, restablecer
+                    </button>
+                    <button
+                      onClick={() => setConfirmingReset(false)}
+                      className="rounded-md border border-white/10 px-2 py-1 text-zinc-300 transition-colors hover:text-zinc-100"
+                    >
+                      Cancelar
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <button
+                  onClick={() => setConfirmingReset(true)}
+                  className="text-[11px] text-zinc-500 transition-colors hover:text-zinc-300"
+                  title="Volver a los proyectos iniciales"
+                >
+                  ↺ Restablecer portafolio
+                </button>
+              )}
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

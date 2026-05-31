@@ -1,0 +1,28 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+
+  body {
+    @apply bg-zinc-950 text-zinc-100 antialiased;
+    margin: 0;
+    overflow: hidden;
+  }
+}
+
+/* Subtle radial vignette so the network feels like it floats in deep space. */
+.synapse-backdrop {
+  background:
+    radial-gradient(
+      circle at 50% 45%,
+      rgba(34, 211, 238, 0.08) 0%,
+      rgba(9, 9, 11, 0) 55%
+    ),
+    #09090b;
+}

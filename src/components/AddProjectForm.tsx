@@ -109,9 +109,13 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.97 }}
                   disabled={!name.trim()}
-                  className="flex-1 rounded-lg bg-lime-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity disabled:opacity-30"
+                  className="flex flex-1 items-center justify-center gap-1.5 rounded-lg bg-lime-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity disabled:opacity-30"
                   style={{ boxShadow: "0 0 18px rgba(146,200,58,0.4)" }}
                 >
+                  {/* Lightning bolt. */}
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" aria-hidden>
+                    <path d="M13 2L4.5 13.5H11l-1 8.5L19.5 10H13l0-8z" />
+                  </svg>
                   Conectar
                 </motion.button>
                 <motion.button
@@ -122,7 +126,7 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
                   title="Añadir proyecto de prueba"
                   className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
                 >
-                  ⚡
+                  🎲
                 </motion.button>
               </div>
             </form>

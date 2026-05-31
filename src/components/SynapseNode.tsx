@@ -9,8 +9,9 @@ interface SynapseNodeProps {
 }
 
 /**
- * A peripheral project node. Renders a glowing point with a minimalist label
- * beneath it; hovering lifts the node and reveals its category.
+ * A peripheral project node: a glossy dark sphere ringed in lime — echoing the
+ * SynapTech "data synapse" nodes — with a minimalist label beneath it. Hovering
+ * lifts and brightens the node and reveals its category.
  */
 export function SynapseNode({ node, index }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
@@ -44,20 +45,27 @@ export function SynapseNode({ node, index }: SynapseNodeProps) {
           ease: "easeInOut",
         }}
       >
-        {/* Glow aura, intensifies on hover. */}
+        {/* Green glow aura, intensifies on hover. */}
         <motion.div
-          className="absolute h-10 w-10 rounded-full bg-cyan-400/30 blur-md"
-          animate={{ scale: hovered ? 1.6 : 1, opacity: hovered ? 0.8 : 0.4 }}
+          className="absolute h-10 w-10 rounded-full bg-lime-400/30 blur-md"
+          animate={{ scale: hovered ? 1.6 : 1, opacity: hovered ? 0.85 : 0.4 }}
           transition={{ duration: 0.3 }}
         />
 
-        {/* The point. */}
+        {/* The node — glossy dark sphere with a lime rim. */}
         <motion.div
-          className="relative h-3.5 w-3.5 rounded-full bg-cyan-300 ring-2 ring-cyan-200/30"
+          className="relative h-4 w-4 rounded-full ring-2 ring-lime-300/70"
+          style={{
+            background:
+              "radial-gradient(circle at 35% 30%, #2c2c30 0%, #141417 60%, #070708 100%)",
+            boxShadow: "0 0 10px rgba(146,200,58,0.8)",
+          }}
           animate={{ scale: hovered ? 1.4 : 1 }}
           transition={{ type: "spring", stiffness: 300, damping: 15 }}
-          style={{ boxShadow: "0 0 10px rgba(34,211,238,0.8)" }}
-        />
+        >
+          {/* Tiny glossy highlight. */}
+          <span className="pointer-events-none absolute left-1/2 top-0.5 h-1 w-1.5 -translate-x-1/2 rounded-full bg-white/40 blur-[1px]" />
+        </motion.div>
 
         {/* Minimalist label. */}
         <div
@@ -65,11 +73,11 @@ export function SynapseNode({ node, index }: SynapseNodeProps) {
             labelBelow ? "top-5" : "bottom-5"
           }`}
         >
-          <span className="text-xs font-medium text-zinc-200 transition-colors group-hover:text-cyan-200">
+          <span className="text-xs font-medium text-zinc-200 transition-colors group-hover:text-lime-200">
             {node.name}
           </span>
           <motion.span
-            className="text-[10px] font-light uppercase tracking-wider text-cyan-400/70"
+            className="text-[10px] font-light uppercase tracking-wider text-lime-400/80"
             initial={false}
             animate={{
               opacity: hovered ? 1 : 0,

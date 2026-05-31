@@ -20,13 +20,15 @@ hacia cada nodo.
 
 ## Características
 
-- 🌌 **Tema Premium Dark** — fondo `zinc-950` con un viñeteado radial sutil.
-- 💠 **Núcleo neón** — el nodo central tiene un *glow* que respira y un anillo
-  giratorio.
-- ⚡ **Sinapsis animadas** — cada conexión tiene un gradiente estático más un
-  pulso luminoso que fluye desde el núcleo hacia el nodo periférico.
-- 🏷️ **Nodos periféricos** — muestran el nombre del proyecto siempre y revelan la
-  categoría al pasar el cursor (*hover*).
+- 🎨 **Identidad de marca SynapTech** — paleta verde lima (`#92c83a` / `#a3d94a`)
+  sobre fondo oscuro, siguiendo el manual de marca y el concepto "data synapse".
+- 🌌 **Tema Premium Dark** — fondo `zinc-950` con un viñeteado radial verde sutil.
+- 💚 **Núcleo neón verde** — esfera oscura *glossy* con un *glow* lima que respira
+  y un anillo giratorio, igual que el letrero de recepción de la marca.
+- ⚡ **Sinapsis curvas animadas** — cada conexión es un arco con gradiente verde y
+  un pulso luminoso que fluye desde el núcleo hacia el nodo periférico.
+- 🏷️ **Nodos periféricos** — esferas oscuras con borde lima; muestran el nombre del
+  proyecto siempre y revelan la categoría al pasar el cursor (*hover*).
 - ➕ **Añadir sinapsis en vivo** — formulario para conectar nuevos proyectos (con
   un botón ⚡ que genera uno de prueba al instante).
 - 📐 **Layout radial responsivo** — los nodos se redistribuyen automáticamente

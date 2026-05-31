@@ -51,7 +51,7 @@ export function SynapseDashboard() {
           </p>
         </div>
         <div className="text-right">
-          <div className="text-2xl font-semibold text-cyan-300">
+          <div className="text-2xl font-semibold text-lime-300">
             {projects.length}
           </div>
           <div className="text-[11px] font-light uppercase tracking-widest text-zinc-500">

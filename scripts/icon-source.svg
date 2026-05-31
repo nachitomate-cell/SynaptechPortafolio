@@ -1,16 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
   <defs>
     <radialGradient id="bg" cx="50%" cy="42%" r="65%">
-      <stop offset="0%" stop-color="#0b2530" />
+      <stop offset="0%" stop-color="#1a2410" />
       <stop offset="100%" stop-color="#09090b" />
     </radialGradient>
-    <radialGradient id="core" cx="50%" cy="50%" r="50%">
-      <stop offset="0%" stop-color="#e0fbff" />
-      <stop offset="45%" stop-color="#22d3ee" />
-      <stop offset="100%" stop-color="#06b6d4" />
+    <radialGradient id="core" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#3a3a3e" />
+      <stop offset="55%" stop-color="#131316" />
+      <stop offset="100%" stop-color="#060607" />
+    </radialGradient>
+    <radialGradient id="periph" cx="35%" cy="30%" r="70%">
+      <stop offset="0%" stop-color="#33331f" />
+      <stop offset="60%" stop-color="#141417" />
+      <stop offset="100%" stop-color="#070708" />
     </radialGradient>
     <filter id="glow" x="-60%" y="-60%" width="220%" height="220%">
-      <feGaussianBlur stdDeviation="10" result="b" />
+      <feGaussianBlur stdDeviation="9" result="b" />
       <feMerge>
         <feMergeNode in="b" />
         <feMergeNode in="SourceGraphic" />
@@ -20,27 +25,30 @@
 
   <rect width="512" height="512" rx="112" fill="url(#bg)" />
 
-  <!-- Synapses -->
-  <g stroke="#22d3ee" stroke-width="4" stroke-linecap="round" opacity="0.7">
-    <line x1="256" y1="256" x2="256" y2="120" />
-    <line x1="256" y1="256" x2="374" y2="188" />
-    <line x1="256" y1="256" x2="374" y2="324" />
-    <line x1="256" y1="256" x2="256" y2="392" />
-    <line x1="256" y1="256" x2="138" y2="324" />
-    <line x1="256" y1="256" x2="138" y2="188" />
+  <!-- Synapses (lime brand green) -->
+  <g stroke="#92c83a" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.85" filter="url(#glow)">
+    <path d="M256 256 Q236 180 256 120" />
+    <path d="M256 256 Q336 200 374 188" />
+    <path d="M256 256 Q352 296 374 324" />
+    <path d="M256 256 Q276 332 256 392" />
+    <path d="M256 256 Q160 312 138 324" />
+    <path d="M256 256 Q176 216 138 188" />
   </g>
 
-  <!-- Peripheral nodes -->
-  <g fill="#22d3ee" filter="url(#glow)">
-    <circle cx="256" cy="120" r="16" />
-    <circle cx="374" cy="188" r="16" />
-    <circle cx="374" cy="324" r="16" />
-    <circle cx="256" cy="392" r="16" />
-    <circle cx="138" cy="324" r="16" />
-    <circle cx="138" cy="188" r="16" />
+  <!-- Peripheral nodes: dark glossy spheres with lime rim -->
+  <g filter="url(#glow)">
+    <g stroke="#a3d94a" stroke-width="3">
+      <circle cx="256" cy="120" r="15" fill="url(#periph)" />
+      <circle cx="374" cy="188" r="15" fill="url(#periph)" />
+      <circle cx="374" cy="324" r="15" fill="url(#periph)" />
+      <circle cx="256" cy="392" r="15" fill="url(#periph)" />
+      <circle cx="138" cy="324" r="15" fill="url(#periph)" />
+      <circle cx="138" cy="188" r="15" fill="url(#periph)" />
+    </g>
   </g>
 
   <!-- Core -->
-  <circle cx="256" cy="256" r="46" fill="url(#core)" filter="url(#glow)" />
-  <circle cx="256" cy="256" r="64" fill="none" stroke="#22d3ee" stroke-opacity="0.4" stroke-width="3" />
+  <circle cx="256" cy="256" r="64" fill="none" stroke="#92c83a" stroke-opacity="0.4" stroke-width="3" />
+  <circle cx="256" cy="256" r="48" fill="url(#core)" stroke="#a3d94a" stroke-width="4" filter="url(#glow)" />
+  <ellipse cx="244" cy="240" rx="14" ry="9" fill="#ffffff" opacity="0.12" />
 </svg>

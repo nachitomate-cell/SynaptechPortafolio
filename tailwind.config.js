@@ -5,10 +5,11 @@ export default {
     extend: {
       colors: {
         synapse: {
-          // Neon cyan / electric blue accent used across the network.
-          glow: "#22d3ee",
-          core: "#06b6d4",
-          edge: "#0ea5e9",
+          // SynapTech brand lime-green accent used across the network.
+          glow: "#a3d94a",
+          core: "#92c83a",
+          edge: "#7bb22e",
+          bright: "#bef264",
         },
       },
       fontFamily: {
@@ -21,7 +22,7 @@ export default {
         ],
       },
       boxShadow: {
-        neon: "0 0 20px rgba(34,211,238,0.45), 0 0 60px rgba(34,211,238,0.25)",
+        neon: "0 0 20px rgba(146,200,58,0.45), 0 0 60px rgba(146,200,58,0.25)",
       },
     },
   },

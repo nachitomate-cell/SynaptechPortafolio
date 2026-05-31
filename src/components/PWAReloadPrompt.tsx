@@ -30,12 +30,12 @@ export function PWAReloadPrompt() {
           exit={{ opacity: 0, y: 24, scale: 0.96 }}
           transition={{ type: "spring", stiffness: 300, damping: 24 }}
           className="pointer-events-auto fixed bottom-6 right-6 z-30 w-72 rounded-2xl border border-white/5 bg-zinc-900/70 p-4 backdrop-blur-md"
-          style={{ boxShadow: "0 0 24px rgba(34,211,238,0.18)" }}
+          style={{ boxShadow: "0 0 24px rgba(146,200,58,0.18)" }}
         >
           <div className="flex items-start gap-3">
             <span
-              className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-cyan-300"
-              style={{ boxShadow: "0 0 10px rgba(34,211,238,0.9)" }}
+              className="mt-1 h-2.5 w-2.5 shrink-0 rounded-full bg-lime-300"
+              style={{ boxShadow: "0 0 10px rgba(146,200,58,0.9)" }}
             />
             <div className="flex-1">
               <p className="text-sm font-medium text-zinc-100">
@@ -53,15 +53,15 @@ export function PWAReloadPrompt() {
                 {needRefresh && (
                   <button
                     onClick={() => updateServiceWorker(true)}
-                    className="rounded-lg bg-cyan-400 px-3 py-1.5 text-xs font-semibold text-zinc-950"
-                    style={{ boxShadow: "0 0 14px rgba(34,211,238,0.4)" }}
+                    className="rounded-lg bg-lime-400 px-3 py-1.5 text-xs font-semibold text-zinc-950"
+                    style={{ boxShadow: "0 0 14px rgba(146,200,58,0.4)" }}
                   >
                     Actualizar
                   </button>
                 )}
                 <button
                   onClick={close}
-                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
+                  className="rounded-lg border border-white/10 px-3 py-1.5 text-xs text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
                 >
                   {needRefresh ? "Después" : "Entendido"}
                 </button>

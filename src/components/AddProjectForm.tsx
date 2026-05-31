@@ -51,13 +51,13 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nombre del proyecto"
-          className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-cyan-400/50"
+          className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
         />
         <input
           value={category}
           onChange={(e) => setCategory(e.target.value)}
           placeholder="Categoría (opcional)"
-          className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-cyan-400/50"
+          className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
         />
 
         <div className="mt-1 flex gap-2">
@@ -66,8 +66,8 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.97 }}
             disabled={!name.trim()}
-            className="flex-1 rounded-lg bg-cyan-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity disabled:opacity-30"
-            style={{ boxShadow: "0 0 18px rgba(34,211,238,0.4)" }}
+            className="flex-1 rounded-lg bg-lime-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity disabled:opacity-30"
+            style={{ boxShadow: "0 0 18px rgba(146,200,58,0.4)" }}
           >
             Conectar
           </motion.button>
@@ -77,7 +77,7 @@ export function AddProjectForm({ onAdd }: AddProjectFormProps) {
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             title="Añadir proyecto de prueba"
-            className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-cyan-400/40 hover:text-cyan-200"
+            className="rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
           >
             ⚡
           </motion.button>

@@ -187,28 +187,17 @@ export function SynapseDashboard() {
         dim: n.active === false,
       }));
     }
-    return groupedCats.flatMap((cat) => [
-      {
-        id: `cat-${cat.id}`,
-        text: cat.name,
-        x: cat.x,
-        y: cat.y,
-        dirX: cat.x - center.x,
-        dirY: cat.y - center.y,
-        color: cat.accent,
-        emphasis: true,
-      },
-      ...cat.projects.map((p) => ({
-        id: p.id,
-        text: p.name,
-        x: p.x,
-        y: p.y,
-        dirX: p.x - cat.x,
-        dirY: p.y - cat.y,
-        color: cat.accent,
-        dim: p.active === false,
-      })),
-    ]);
+    // Overview: only the categories are shown (no associated projects).
+    return groupedCats.map((cat) => ({
+      id: `cat-${cat.id}`,
+      text: cat.name,
+      x: cat.x,
+      y: cat.y,
+      dirX: cat.x - center.x,
+      dirY: cat.y - center.y,
+      color: cat.accent,
+      emphasis: true,
+    }));
   }, [
     view,
     focusedCategory,
@@ -336,29 +325,18 @@ export function SynapseDashboard() {
           {/* ── Vista: Por categorías (resumen) ── */}
           {ready && view === "categories" && !focusedCategory && (
             <>
+              {/* Only core → category hubs; projects appear on drill-down. */}
               <svg className="absolute inset-0 h-full w-full" aria-hidden>
                 {groupedCats.map((cat, i) => (
-                  <g key={cat.id}>
-                    <SynapseLink
-                      id={`hub-${cat.id}`}
-                      index={i}
-                      from={center}
-                      to={{ x: cat.x, y: cat.y }}
-                      color={cat.accent}
-                      strength={1.8}
-                    />
-                    {cat.projects.map((p, j) => (
-                      <SynapseLink
-                        key={p.id}
-                        id={`leaf-${p.id}`}
-                        index={j}
-                        from={{ x: cat.x, y: cat.y }}
-                        to={{ x: p.x, y: p.y }}
-                        color={cat.accent}
-                        inactive={p.active === false}
-                      />
-                    ))}
-                  </g>
+                  <SynapseLink
+                    key={cat.id}
+                    id={`hub-${cat.id}`}
+                    index={i}
+                    from={center}
+                    to={{ x: cat.x, y: cat.y }}
+                    color={cat.accent}
+                    strength={1.8}
+                  />
                 ))}
               </svg>
 
@@ -374,17 +352,6 @@ export function SynapseDashboard() {
                     onFocus={() => setFocusedCategory(cat.name)}
                   />
                 ))}
-                {groupedCats.flatMap((cat) =>
-                  cat.projects.map((p, j) => (
-                    <SynapseNode
-                      key={p.id}
-                      node={p}
-                      index={j}
-                      accent={cat.accent}
-                      {...nodeHandlers}
-                    />
-                  )),
-                )}
               </AnimatePresence>
 
               <CentralNode x={center.x} y={center.y} connections={activeCount} />

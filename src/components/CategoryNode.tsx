@@ -3,7 +3,6 @@ import { motion } from "framer-motion";
 interface CategoryNodeProps {
   x: number;
   y: number;
-  name: string;
   accent: string;
   /** Number of projects in this category. */
   count: number;
@@ -12,16 +11,10 @@ interface CategoryNodeProps {
 
 /**
  * A category hub in the "por categorías" view: a mid-sized glossy sphere tinted
- * with the category accent, labelled with the category name and project count.
+ * with the category accent showing its project count. The category name is drawn
+ * in the decluttered LabelLayer.
  */
-export function CategoryNode({
-  x,
-  y,
-  name,
-  accent,
-  count,
-  index,
-}: CategoryNodeProps) {
+export function CategoryNode({ x, y, accent, count, index }: CategoryNodeProps) {
   return (
     <motion.div
       className="pointer-events-none absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center"
@@ -61,14 +54,7 @@ export function CategoryNode({
             {count}
           </span>
         </div>
-
-        {/* Category label. */}
-        <span
-          className="mt-2 whitespace-nowrap text-[11px] font-semibold uppercase tracking-wider"
-          style={{ color: accent }}
-        >
-          {name}
-        </span>
+        {/* The category name is drawn in the decluttered LabelLayer. */}
       </div>
     </motion.div>
   );

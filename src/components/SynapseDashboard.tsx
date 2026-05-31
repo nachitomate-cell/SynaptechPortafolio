@@ -1,15 +1,21 @@
-import { useState } from "react";
-import { AnimatePresence } from "framer-motion";
+import { useMemo, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import type { SynapseProject } from "../types";
 import { INITIAL_PROJECTS } from "../data/mockData";
 import { accentForCategory } from "../data/categories";
 import { useElementSize } from "../hooks/useElementSize";
-import { useRadialLayout } from "../hooks/useRadialLayout";
+import {
+  useRadialLayout,
+  ARRANGEMENTS,
+  type Arrangement,
+} from "../hooks/useRadialLayout";
 import { useCategoryLayout } from "../hooks/useCategoryLayout";
+import { useLabelDeclutter, type RawLabel } from "../hooks/useLabelDeclutter";
 import { CentralNode } from "./CentralNode";
 import { CategoryNode } from "./CategoryNode";
 import { SynapseNode } from "./SynapseNode";
 import { SynapseLink } from "./SynapseLink";
+import { LabelLayer } from "./LabelLayer";
 import { AddProjectForm } from "./AddProjectForm";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
 
@@ -28,15 +34,17 @@ function makeId(name: string): string {
 /**
  * Interactive synaptic dashboard for SynapTech SpA. A glowing core sits at the
  * center; every project radiates outward as a node connected by an animated
- * synapse. Two views are available — the full "sinapsis gigante" network and a
- * category-clustered view — and synapses can be added or deleted live.
+ * synapse. Supports two views (full network / by category), live add & delete,
+ * several ordered arrangements, and a decluttered label layer so connection
+ * titles never overlap.
  */
 export function SynapseDashboard() {
   const [projects, setProjects] = useState<SynapseProject[]>(INITIAL_PROJECTS);
   const [view, setView] = useState<ViewMode>("giant");
+  const [arrangement, setArrangement] = useState<Arrangement>("ring");
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
 
-  const giant = useRadialLayout(projects, { width, height });
+  const giant = useRadialLayout(projects, { width, height, arrangement });
   const grouped = useCategoryLayout(projects, { width, height });
   const center = giant.center;
 
@@ -47,6 +55,52 @@ export function SynapseDashboard() {
   const deleteProject = (id: string) => {
     setProjects((prev) => prev.filter((p) => p.id !== id));
   };
+
+  const cycleArrangement = () => {
+    const i = ARRANGEMENTS.findIndex((a) => a.id === arrangement);
+    setArrangement(ARRANGEMENTS[(i + 1) % ARRANGEMENTS.length].id);
+  };
+
+  const arrangementLabel =
+    ARRANGEMENTS.find((a) => a.id === arrangement)?.label ?? "";
+
+  // Build the (non-overlapping) connection titles for the active view.
+  const rawLabels = useMemo<RawLabel[]>(() => {
+    if (view === "giant") {
+      return giant.nodes.map((n) => ({
+        id: n.id,
+        text: n.name,
+        x: n.x,
+        y: n.y,
+        dirX: n.x - center.x,
+        dirY: n.y - center.y,
+        color: accentForCategory(n.category),
+      }));
+    }
+    return grouped.categories.flatMap((cat) => [
+      {
+        id: `cat-${cat.id}`,
+        text: cat.name,
+        x: cat.x,
+        y: cat.y,
+        dirX: cat.x - center.x,
+        dirY: cat.y - center.y,
+        color: cat.accent,
+        emphasis: true,
+      },
+      ...cat.projects.map((p) => ({
+        id: p.id,
+        text: p.name,
+        x: p.x,
+        y: p.y,
+        dirX: p.x - cat.x,
+        dirY: p.y - cat.y,
+        color: cat.accent,
+      })),
+    ]);
+  }, [view, giant.nodes, grouped.categories, center.x, center.y]);
+
+  const labels = useLabelDeclutter(rawLabels, { width, height });
 
   const ready = width > 0 && height > 0;
 
@@ -63,8 +117,22 @@ export function SynapseDashboard() {
           </p>
         </div>
 
-        <div className="absolute left-1/2 top-6 -translate-x-1/2">
+        <div className="absolute left-1/2 top-6 flex -translate-x-1/2 flex-col items-center gap-2">
           <ViewToggle value={view} onChange={setView} />
+          {view === "giant" && (
+            <motion.button
+              onClick={cycleArrangement}
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              className="pointer-events-auto flex items-center gap-2 rounded-full border border-white/5 bg-zinc-900/60 px-4 py-1.5 text-xs font-medium text-zinc-300 backdrop-blur-md transition-colors hover:border-lime-400/40 hover:text-lime-200"
+            >
+              <span className="text-lime-300">⤮</span>
+              Reordenar ·{" "}
+              <span className="font-semibold text-lime-200">
+                {arrangementLabel}
+              </span>
+            </motion.button>
+          )}
         </div>
 
         <div className="text-right">
@@ -151,7 +219,6 @@ export function SynapseDashboard() {
                   index={i}
                   x={cat.x}
                   y={cat.y}
-                  name={cat.name}
                   accent={cat.accent}
                   count={cat.projects.length}
                 />
@@ -176,6 +243,9 @@ export function SynapseDashboard() {
             />
           </>
         )}
+
+        {/* Decluttered connection titles (never overlapping). */}
+        {ready && <LabelLayer labels={labels} />}
 
         {/* Empty state. */}
         {ready && projects.length === 0 && (

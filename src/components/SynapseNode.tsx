@@ -8,14 +8,14 @@ interface SynapseNodeProps {
   index: number;
   /** Remove this synapse from the network. */
   onDelete: (id: string) => void;
-  /** Accent color for the rim/glow/label (defaults to brand green). */
+  /** Accent color for the rim/glow (defaults to brand green). */
   accent?: string;
 }
 
 /**
  * A peripheral project node: a glossy dark sphere ringed in the accent color —
- * echoing the SynapTech "data synapse" nodes — with a minimalist label beneath.
- * Hovering lifts and brightens the node, reveals its category, and exposes a
+ * echoing the SynapTech "data synapse" nodes. Its title is rendered separately
+ * in the decluttered LabelLayer; hovering brightens the node and exposes a
  * delete control to disconnect the synapse.
  */
 export function SynapseNode({
@@ -26,21 +26,17 @@ export function SynapseNode({
 }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
 
-  // Place the label on the outward side so it never overlaps the core.
-  const labelBelow = Math.sin(node.angle) >= -0.2;
-
   return (
     <motion.div
       className="group absolute flex -translate-x-1/2 -translate-y-1/2 cursor-pointer flex-col items-center"
-      style={{ left: node.x, top: node.y }}
-      initial={{ scale: 0, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+      initial={{ scale: 0, opacity: 0, left: node.x, top: node.y }}
+      animate={{ scale: 1, opacity: 1, left: node.x, top: node.y }}
       exit={{ scale: 0, opacity: 0 }}
       transition={{
-        type: "spring",
-        stiffness: 260,
-        damping: 18,
-        delay: index * 0.04,
+        scale: { type: "spring", stiffness: 260, damping: 18, delay: index * 0.04 },
+        opacity: { duration: 0.3, delay: index * 0.04 },
+        left: { type: "spring", stiffness: 120, damping: 20 },
+        top: { type: "spring", stiffness: 120, damping: 20 },
       }}
       onHoverStart={() => setHovered(true)}
       onHoverEnd={() => setHovered(false)}
@@ -97,32 +93,6 @@ export function SynapseNode({
         >
           ✕
         </motion.button>
-
-        {/* Minimalist label. */}
-        <div
-          className={`absolute flex w-max flex-col items-center ${
-            labelBelow ? "top-5" : "bottom-5"
-          }`}
-        >
-          <span
-            className="text-xs font-medium text-zinc-200 transition-colors"
-            style={hovered ? { color: accent } : undefined}
-          >
-            {node.name}
-          </span>
-          <motion.span
-            className="text-[10px] font-light uppercase tracking-wider"
-            style={{ color: accent }}
-            initial={false}
-            animate={{
-              opacity: hovered ? 0.85 : 0,
-              height: hovered ? "auto" : 0,
-            }}
-            transition={{ duration: 0.2 }}
-          >
-            {node.category}
-          </motion.span>
-        </div>
       </motion.div>
     </motion.div>
   );

@@ -36,6 +36,11 @@ hacia cada nodo.
 - 🔀 **Dos vistas** — *Sinapsis gigante* (todos los proyectos alrededor del núcleo)
   y *Por categorías* (clusters: el núcleo conecta con un hub por categoría y cada
   hub con sus proyectos). Se alternan con un *toggle* en la cabecera.
+- 🔁 **Reordenar** — un botón cicla entre disposiciones ordenadas (Anillo, Espiral,
+  Órbitas, Abanico); los nodos transicionan suavemente a su nueva posición.
+- 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
+  algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
+  dos títulos de conexión nunca se superpongan, por densa que sea la red.
 - 🏷️ **Categorías por defecto** — Retail, Servicios, Educación, Salud, Gastronomía
   y Tecnología, cada una con un acento dentro de la familia verde de marca.
 - 📐 **Layout radial responsivo** — los nodos se redistribuyen automáticamente
@@ -72,15 +77,18 @@ src/
 │   ├── SynapseDashboard.tsx   # orquestador: vistas + render de la red
 │   ├── CentralNode.tsx        # núcleo SynapTech con glow neón
 │   ├── CategoryNode.tsx       # hub de categoría (vista por categorías)
-│   ├── SynapseNode.tsx        # nodo periférico con label y borrado en hover
+│   ├── SynapseNode.tsx        # nodo periférico (anima posición) + borrado
 │   ├── SynapseLink.tsx        # sinapsis SVG curva con pulso animado
+│   ├── LabelLayer.tsx         # capa de títulos decluttered + líneas guía
 │   ├── ViewToggle.tsx         # toggle "gigante" / "por categorías"
 │   ├── AddProjectForm.tsx     # panel para añadir conexiones
 │   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
 ├── hooks/
-│   ├── useRadialLayout.ts     # layout radial de la sinapsis gigante
+│   ├── useRadialLayout.ts     # disposiciones ordenadas (anillo/espiral/…)
 │   ├── useCategoryLayout.ts   # layout en clusters por categoría
+│   ├── useLabelDeclutter.ts   # anti-solapamiento de etiquetas
 │   └── useElementSize.ts      # mide el lienzo para responsividad
+├── lib/measureText.ts         # medición de texto (canvas, cacheada)
 ├── data/
 │   ├── mockData.ts            # proyectos iniciales
 │   └── categories.ts          # categorías por defecto + acentos

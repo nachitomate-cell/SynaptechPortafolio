@@ -72,6 +72,16 @@ hacia cada nodo.
   modal) y el panel muestra totales por categoría y por estado con barras.
 - 🎤 **Modo presentación + export/import** — vista solo-lectura (oculta edición)
   para mostrar a clientes, y exportar/importar el portafolio como JSON (backup).
+- 🕸️ **Conexiones entre proyectos** — enlaza proyecto↔proyecto (p. ej. instancias
+  del mismo producto) desde el modal; se dibujan como sinapsis laterales en el
+  lienzo. Al borrar un proyecto se limpian sus enlaces.
+- ⭐ **GitHub en vivo** — al importar se guardan stars, lenguaje y último push;
+  botón "Actualizar GitHub" para refrescar la metadata de los repos vinculados.
+- 🔗 **Compartir por URL** — genera un enlace de solo-lectura con el portafolio
+  serializado (`?s=…`); al abrirlo entra en modo presentación con un banner para
+  salir. No toca los datos locales del visitante.
+- 🖼️ **Detalle enriquecido** — imagen de portada, link a demo en vivo y
+  highlights por proyecto en el modal.
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.
@@ -122,8 +132,9 @@ src/
 │   ├── LabelLayer.tsx         # capa de títulos decluttered + líneas guía
 │   ├── ViewToggle.tsx         # toggle "gigante" / "por categorías"
 │   ├── ControlDrawer.tsx      # búsqueda + filtros + resumen + acciones
+│   ├── ProjectConnections.tsx # aristas proyecto↔proyecto en el lienzo
 │   ├── GitHubImportModal.tsx  # importar repos públicos de GitHub
-│   ├── ProjectInfoModal.tsx   # detalle: estado, descripción, repo
+│   ├── ProjectInfoModal.tsx   # detalle: estado, conexiones, demo, highlights
 │   ├── AddProjectForm.tsx     # panel para añadir conexiones
 │   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
 ├── hooks/
@@ -131,7 +142,10 @@ src/
 │   ├── useCategoryLayout.ts   # layout en clusters por categoría
 │   ├── useLabelDeclutter.ts   # anti-solapamiento de etiquetas
 │   └── useElementSize.ts      # mide el lienzo para responsividad
-├── lib/measureText.ts         # medición de texto (canvas, cacheada)
+├── lib/
+│   ├── measureText.ts         # medición de texto (canvas, cacheada)
+│   ├── github.ts              # API pública de GitHub (repos + metadata)
+│   └── share.ts               # serializa el portafolio a un enlace (?s=…)
 ├── store/projectStore.ts      # estado de dominio (Zustand) + persistencia
 ├── data/
 │   ├── mockData.ts            # proyectos iniciales (semilla)

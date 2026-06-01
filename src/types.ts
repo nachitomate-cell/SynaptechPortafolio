@@ -18,6 +18,17 @@ export interface SynapseProject {
   description?: string;
   /** Lifecycle status (see data/statuses.ts). Defaults to "en-curso". */
   status?: import("./data/statuses").ProjectStatus;
+  /** Ids of other projects this one is linked to (symmetric edges). */
+  connections?: string[];
+  /** Live GitHub metadata (filled on import or refresh). */
+  stars?: number;
+  language?: string;
+  /** ISO timestamp of the last push, for "actualizado hace…". */
+  pushedAt?: string;
+  /** Enriched detail: preview image, live demo and highlight bullets. */
+  imageUrl?: string;
+  demoUrl?: string;
+  highlights?: string[];
 }
 
 /**

@@ -15,6 +15,7 @@ import { CentralNode } from "./CentralNode";
 import { CategoryNode } from "./CategoryNode";
 import { SynapseNode } from "./SynapseNode";
 import { SynapseLink } from "./SynapseLink";
+import { ProjectConnections } from "./ProjectConnections";
 import { LabelLayer } from "./LabelLayer";
 import { AddProjectForm } from "./AddProjectForm";
 import { ViewToggle, type ViewMode } from "./ViewToggle";
@@ -23,6 +24,9 @@ import { ProjectInfoModal } from "./ProjectInfoModal";
 import { GitHubImportModal } from "./GitHubImportModal";
 import { ControlDrawer } from "./ControlDrawer";
 import type { ProjectStatus } from "../data/statuses";
+import type { SynapseProject } from "../types";
+import { encodeProjects, decodeProjects } from "../lib/share";
+import { parseRepoUrl, fetchRepoMeta } from "../lib/github";
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
@@ -41,11 +45,12 @@ type Overrides = Record<string, { x: number; y: number }>;
  */
 export function SynapseDashboard() {
   // Domain state (persisted) lives in the store; view state stays local.
-  const projects = useProjectStore((s) => s.projects);
+  const storeProjects = useProjectStore((s) => s.projects);
   const addProject = useProjectStore((s) => s.addProject);
   const deleteProject = useProjectStore((s) => s.deleteProject);
   const toggleActive = useProjectStore((s) => s.toggleActive);
   const updateProject = useProjectStore((s) => s.updateProject);
+  const toggleConnection = useProjectStore((s) => s.toggleConnection);
   const importProjects = useProjectStore((s) => s.importProjects);
   const replaceProjects = useProjectStore((s) => s.replaceProjects);
   const resetProjects = useProjectStore((s) => s.resetProjects);
@@ -64,12 +69,41 @@ export function SynapseDashboard() {
   const [filterCategories, setFilterCategories] = useState<Set<string>>(new Set());
   const [filterStatuses, setFilterStatuses] = useState<Set<ProjectStatus>>(new Set());
   const [onlyActive, setOnlyActive] = useState(false);
+  // Read-only shared portfolio (from a ?s= link); overrides the store when set.
+  const [sharedProjects, setSharedProjects] = useState<SynapseProject[] | null>(
+    null,
+  );
+  const [toast, setToast] = useState<string | null>(null);
+  const [ghBusy, setGhBusy] = useState(false);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
   const [draggingActive, setDraggingActive] = useState(false);
   const dragTimer = useRef<ReturnType<typeof setTimeout>>();
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
+
+  // A shared link shows a read-only snapshot without touching the user's data.
+  const shared = sharedProjects !== null;
+  const projects = sharedProjects ?? storeProjects;
+
+  // On first load, hydrate a shared portfolio from the URL (?s=…).
+  useEffect(() => {
+    const token = new URLSearchParams(window.location.search).get("s");
+    if (!token) return;
+    const decoded = decodeProjects(token);
+    if (decoded) {
+      setSharedProjects(decoded);
+      setPresentation(true);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Auto-dismiss transient toasts.
+  useEffect(() => {
+    if (!toast) return;
+    const t = setTimeout(() => setToast(null), 2600);
+    return () => clearTimeout(t);
+  }, [toast]);
 
   const giant = useRadialLayout(projects, { width, height, arrangement });
   const grouped = useCategoryLayout(projects, { width, height });
@@ -234,6 +268,57 @@ export function SynapseDashboard() {
       }
     };
     reader.readAsText(file);
+  };
+
+  // ── Share by URL ──
+  const shareLink = async () => {
+    const url = `${window.location.origin}${window.location.pathname}?s=${encodeProjects(projects)}`;
+    try {
+      await navigator.clipboard.writeText(url);
+      setToast("Enlace copiado al portapapeles");
+    } catch {
+      // Clipboard blocked (e.g. insecure context): drop it in the URL bar.
+      window.history.replaceState(null, "", url);
+      setToast("Enlace listo en la barra de direcciones");
+    }
+  };
+  const exitShared = () => {
+    setSharedProjects(null);
+    setPresentation(false);
+    window.history.replaceState(
+      null,
+      "",
+      window.location.origin + window.location.pathname,
+    );
+  };
+
+  // ── Refresh live GitHub metadata ──
+  const refreshGitHub = async () => {
+    if (ghBusy) return;
+    const targets = storeProjects
+      .map((p) => ({ p, ref: parseRepoUrl(p.repoUrl) }))
+      .filter((t) => t.ref);
+    if (targets.length === 0) {
+      setToast("No hay proyectos con repo de GitHub");
+      return;
+    }
+    setGhBusy(true);
+    let ok = 0;
+    for (const { p, ref } of targets) {
+      try {
+        const meta = await fetchRepoMeta(ref!.owner, ref!.repo);
+        updateProject(p.id, {
+          stars: meta.stars,
+          language: meta.language ?? undefined,
+          pushedAt: meta.pushedAt,
+        });
+        ok++;
+      } catch {
+        /* skip rate-limited / missing repos */
+      }
+    }
+    setGhBusy(false);
+    setToast(`GitHub actualizado · ${ok}/${targets.length} repos`);
   };
 
   const activeCount = projects.filter((p) => p.active !== false).length;
@@ -443,6 +528,7 @@ export function SynapseDashboard() {
                     inactive={node.active === false}
                   />
                 ))}
+                <ProjectConnections nodes={giantNodes} isDimmed={isDimmed} />
               </svg>
 
               <AnimatePresence>
@@ -515,6 +601,7 @@ export function SynapseDashboard() {
                     inactive={node.active === false}
                   />
                 ))}
+                <ProjectConnections nodes={focusNodes} isDimmed={isDimmed} />
               </svg>
 
               <AnimatePresence>
@@ -597,6 +684,10 @@ export function SynapseDashboard() {
         onTogglePresentation={() => setPresentation((v) => !v)}
         onExport={exportJSON}
         onImport={importJSON}
+        onShare={shareLink}
+        onRefreshGitHub={refreshGitHub}
+        ghBusy={ghBusy}
+        shared={shared}
       />
 
       {/* GitHub import module. */}
@@ -613,6 +704,7 @@ export function SynapseDashboard() {
       <ProjectInfoModal
         project={infoProject}
         accent={accentForCategory(infoProject?.category)}
+        allProjects={projects}
         readOnly={presentation}
         onClose={() => setInfoId(null)}
         onRepoChange={(id, url) => updateProject(id, { repoUrl: url })}
@@ -620,7 +712,40 @@ export function SynapseDashboard() {
           updateProject(id, { description: text })
         }
         onStatusChange={setStatus}
+        onPatch={updateProject}
+        onToggleConnection={toggleConnection}
       />
+
+      {/* Shared-view banner (read-only snapshot from a link). */}
+      {shared && (
+        <div className="pointer-events-auto absolute bottom-4 left-4 z-30 flex items-center gap-3 rounded-full border border-lime-400/30 bg-zinc-900/80 px-4 py-2 text-xs text-zinc-300 backdrop-blur-md sm:bottom-6 sm:left-6">
+          <span className="flex items-center gap-1.5">
+            <span className="text-lime-300">👁</span> Vista compartida · solo
+            lectura
+          </span>
+          <button
+            onClick={exitShared}
+            className="font-semibold text-lime-300 transition-colors hover:text-lime-200"
+          >
+            Salir
+          </button>
+        </div>
+      )}
+
+      {/* Transient toast. */}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 12 }}
+            className="pointer-events-none absolute bottom-24 left-1/2 z-40 -translate-x-1/2 rounded-full border border-white/10 bg-zinc-900/90 px-4 py-2 text-xs font-medium text-zinc-100 backdrop-blur-md"
+            style={{ boxShadow: "0 0 24px rgba(146,200,58,0.25)" }}
+          >
+            {toast}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

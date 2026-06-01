@@ -24,6 +24,11 @@ interface ControlDrawerProps {
   onTogglePresentation: () => void;
   onExport: () => void;
   onImport: (file: File) => void;
+  onShare: () => void;
+  onRefreshGitHub: () => void;
+  ghBusy: boolean;
+  /** When viewing a shared link, editing actions are hidden. */
+  shared: boolean;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -77,6 +82,10 @@ export function ControlDrawer({
   onTogglePresentation,
   onExport,
   onImport,
+  onShare,
+  onRefreshGitHub,
+  ghBusy,
+  shared,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -256,43 +265,63 @@ export function ControlDrawer({
                   Acciones
                 </span>
                 <button
-                  onClick={onTogglePresentation}
-                  className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
-                    presentation
-                      ? "border-lime-400/60 bg-lime-400/10 text-lime-200"
-                      : "border-white/10 text-zinc-300 hover:border-lime-400/40 hover:text-lime-200"
-                  }`}
+                  onClick={onShare}
+                  className="flex items-center justify-center gap-2 rounded-lg bg-lime-400 px-3 py-2 text-sm font-semibold text-zinc-950 transition-opacity hover:opacity-90"
+                  style={{ boxShadow: "0 0 18px rgba(146,200,58,0.35)" }}
                 >
-                  Modo presentación
-                  <span className="text-[11px]">
-                    {presentation ? "ON" : "OFF"}
-                  </span>
+                  🔗 Compartir enlace
                 </button>
-                <div className="flex gap-2">
+                {!shared && (
                   <button
-                    onClick={onExport}
-                    className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                    onClick={onTogglePresentation}
+                    className={`flex items-center justify-between rounded-lg border px-3 py-2 text-sm transition-colors ${
+                      presentation
+                        ? "border-lime-400/60 bg-lime-400/10 text-lime-200"
+                        : "border-white/10 text-zinc-300 hover:border-lime-400/40 hover:text-lime-200"
+                    }`}
                   >
-                    Exportar JSON
+                    Modo presentación
+                    <span className="text-[11px]">
+                      {presentation ? "ON" : "OFF"}
+                    </span>
                   </button>
+                )}
+                {!shared && (
                   <button
-                    onClick={() => fileRef.current?.click()}
-                    className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                    onClick={onRefreshGitHub}
+                    disabled={ghBusy}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200 disabled:opacity-50"
                   >
-                    Importar JSON
+                    {ghBusy ? "Actualizando…" : "↻ Actualizar GitHub (stars)"}
                   </button>
-                  <input
-                    ref={fileRef}
-                    type="file"
-                    accept="application/json,.json"
-                    className="hidden"
-                    onChange={(e) => {
-                      const f = e.target.files?.[0];
-                      if (f) onImport(f);
-                      e.target.value = "";
-                    }}
-                  />
-                </div>
+                )}
+                {!shared && (
+                  <div className="flex gap-2">
+                    <button
+                      onClick={onExport}
+                      className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                    >
+                      Exportar JSON
+                    </button>
+                    <button
+                      onClick={() => fileRef.current?.click()}
+                      className="flex-1 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                    >
+                      Importar JSON
+                    </button>
+                    <input
+                      ref={fileRef}
+                      type="file"
+                      accept="application/json,.json"
+                      className="hidden"
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) onImport(f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </motion.aside>

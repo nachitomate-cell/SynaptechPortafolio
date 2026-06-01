@@ -9,7 +9,14 @@ interface GitHubImportModalProps {
   existingRepoUrls: Set<string>;
   onClose: () => void;
   onImport: (
-    items: { name: string; category: string; repoUrl: string }[],
+    items: {
+      name: string;
+      category: string;
+      repoUrl: string;
+      language?: string;
+      stars?: number;
+      pushedAt?: string;
+    }[],
   ) => void;
 }
 
@@ -91,6 +98,9 @@ export function GitHubImportModal({
         name: r.name,
         category: rows[r.id].category,
         repoUrl: r.htmlUrl,
+        language: r.language ?? undefined,
+        stars: r.stars,
+        pushedAt: r.pushedAt,
       })),
     );
     close();
@@ -233,6 +243,11 @@ export function GitHubImportModal({
                         {r.language && (
                           <span className="shrink-0 text-[10px] text-zinc-500">
                             {r.language}
+                          </span>
+                        )}
+                        {r.stars > 0 && (
+                          <span className="shrink-0 text-[10px] text-amber-300/80">
+                            ★ {r.stars}
                           </span>
                         )}
                         {already && (

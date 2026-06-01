@@ -16,11 +16,20 @@ interface ProjectState {
   addProject: (name: string, category: string) => void;
   /** Bulk-import projects (e.g. from GitHub); skips repos already present. */
   importProjects: (
-    items: { name: string; category: string; repoUrl: string }[],
+    items: {
+      name: string;
+      category: string;
+      repoUrl: string;
+      language?: string;
+      stars?: number;
+      pushedAt?: string;
+    }[],
   ) => void;
   deleteProject: (id: string) => void;
   toggleActive: (id: string) => void;
   updateProject: (id: string, patch: Partial<SynapseProject>) => void;
+  /** Add/remove a symmetric link between two projects. */
+  toggleConnection: (a: string, b: string) => void;
   /** Replace the whole portfolio (e.g. importing a JSON backup). */
   replaceProjects: (projects: SynapseProject[]) => void;
   resetProjects: () => void;
@@ -58,13 +67,25 @@ export const useProjectStore = create<ProjectState>()(
               name: i.name,
               category: i.category,
               repoUrl: i.repoUrl,
+              language: i.language,
+              stars: i.stars,
+              pushedAt: i.pushedAt,
               active: true,
             }));
           return { projects: [...s.projects, ...toAdd] };
         }),
 
       deleteProject: (id) =>
-        set((s) => ({ projects: s.projects.filter((p) => p.id !== id) })),
+        set((s) => ({
+          // Drop the project and scrub it from everyone's connection list.
+          projects: s.projects
+            .filter((p) => p.id !== id)
+            .map((p) =>
+              p.connections?.includes(id)
+                ? { ...p, connections: p.connections.filter((c) => c !== id) }
+                : p,
+            ),
+        })),
 
       toggleActive: (id) =>
         set((s) => ({
@@ -79,6 +100,23 @@ export const useProjectStore = create<ProjectState>()(
             p.id === id ? { ...p, ...patch } : p,
           ),
         })),
+
+      toggleConnection: (a, b) =>
+        set((s) => {
+          if (a === b) return s;
+          const link = (p: SynapseProject, other: string) => {
+            const cur = p.connections ?? [];
+            const next = cur.includes(other)
+              ? cur.filter((c) => c !== other)
+              : [...cur, other];
+            return { ...p, connections: next };
+          };
+          return {
+            projects: s.projects.map((p) =>
+              p.id === a ? link(p, b) : p.id === b ? link(p, a) : p,
+            ),
+          };
+        }),
 
       replaceProjects: (projects) => set({ projects }),
 

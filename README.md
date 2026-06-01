@@ -88,6 +88,12 @@ hacia cada nodo.
   y un fondo animado de neuronas a la deriva. Respeta `prefers-reduced-motion` y
   hay un interruptor **"Efectos visuales"** en el panel para desactivar los
   bucles de animación si el equipo va justo (mejora la fluidez).
+- 🔔 **Recordatorios de Instagram (PWA)** — avisa los **lunes, jueves y
+  sábados** para subir 3 publicaciones. Se activan desde el panel
+  (pide permiso de notificaciones). En segundo plano usan **Periodic Background
+  Sync** (PWA instalada en Chrome/Edge; el navegador decide el momento exacto) y,
+  con la app abierta, un respaldo en primer plano. Cada día avisa una sola vez.
+  En iOS solo dispara con la app abierta. Sin backend ni datos enviados.
 - 🌙 **Modo ambiente / salvapantallas** — tras ~45 s de inactividad (o manual,
   desde el panel) entra en una vista inmersiva sin controles: la red respira y
   deriva suavemente mientras un foco recorre los proyectos uno a uno. Cualquier
@@ -173,6 +179,7 @@ src/
 ├── lib/
 │   ├── measureText.ts         # medición de texto (canvas, cacheada)
 │   ├── github.ts              # API pública de GitHub (repos + metadata)
+│   ├── reminders.ts           # recordatorios de Instagram (periodic sync)
 │   └── share.ts               # serializa el portafolio a un enlace (?s=…)
 ├── store/projectStore.ts      # estado de dominio (Zustand) + persistencia
 ├── data/

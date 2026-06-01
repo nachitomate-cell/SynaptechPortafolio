@@ -46,6 +46,8 @@ export default defineConfig({
         // Precache the app shell + assets, and serve index.html for SPA routes.
         globPatterns: ["**/*.{js,css,html,svg,png,ico,woff,woff2}"],
         navigateFallback: "index.html",
+        // Inject custom SW logic (Instagram reminders via periodic sync).
+        importScripts: ["sw-custom.js"],
         // Cache the Google Fonts used by the UI for offline use.
         runtimeCaching: [
           {

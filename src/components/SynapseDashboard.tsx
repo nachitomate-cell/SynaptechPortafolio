@@ -31,6 +31,15 @@ import type { ProjectStatus } from "../data/statuses";
 import type { SynapseProject } from "../types";
 import { encodeProjects, decodeProjects } from "../lib/share";
 import { parseRepoUrl, fetchRepoMeta } from "../lib/github";
+import {
+  notificationsSupported,
+  notificationPermission,
+  enableReminders,
+  disableReminders,
+  syncReminders,
+  checkReminderNow,
+  sendTestReminder,
+} from "../lib/reminders";
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
@@ -99,6 +108,11 @@ export function SynapseDashboard() {
   );
   // Master switch for looping eye-candy (off = calmer + smoother on weak GPUs).
   const [effectsOn, setEffectsOn] = useLocalStorage("synaptech-effects", true);
+  // Instagram posting reminders (Mon/Thu/Sat) via the service worker.
+  const [remindersEnabled, setRemindersEnabled] = useLocalStorage(
+    "synaptech-reminders",
+    false,
+  );
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
@@ -128,6 +142,22 @@ export function SynapseDashboard() {
     const t = setTimeout(() => setToast(null), 2600);
     return () => clearTimeout(t);
   }, [toast]);
+
+  // Keep reminders alive: re-register background sync on load and, while the
+  // app is open, periodically nudge the SW so the day's reminder still fires.
+  useEffect(() => {
+    if (!remindersEnabled) return;
+    void syncReminders();
+    const onVisible = () => {
+      if (!document.hidden) void checkReminderNow();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    const iv = setInterval(() => void checkReminderNow(), 30 * 60 * 1000);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisible);
+      clearInterval(iv);
+    };
+  }, [remindersEnabled]);
 
   const reducedMotion = usePrefersReducedMotion();
   // Effective "calm" flag: OS preference or the manual effects switch.
@@ -364,6 +394,32 @@ export function SynapseDashboard() {
     setFocusedCategory(null);
     setOverrides({});
     setToast("Preferencias restablecidas");
+  };
+
+  // ── Instagram reminders ──
+  const enableRemindersFlow = async () => {
+    const res = await enableReminders();
+    if (res.ok) {
+      setRemindersEnabled(true);
+      setToast(
+        res.background
+          ? "Recordatorios activados · lun · jue · sáb"
+          : "Activados (avisará con la app abierta)",
+      );
+    } else if (res.reason === "denied") {
+      setToast("Permiso de notificaciones denegado");
+    } else {
+      setToast("Tu navegador no soporta notificaciones");
+    }
+  };
+  const disableRemindersFlow = async () => {
+    await disableReminders();
+    setRemindersEnabled(false);
+    setToast("Recordatorios desactivados");
+  };
+  const testReminder = async () => {
+    const ok = await sendTestReminder();
+    setToast(ok ? "Notificación de prueba enviada" : "Activa los recordatorios primero");
   };
 
   const activeCount = projects.filter((p) => p.active !== false).length;
@@ -868,6 +924,12 @@ export function SynapseDashboard() {
         effectsOn={effectsOn}
         onToggleEffects={() => setEffectsOn((v) => !v)}
         onResetPreferences={resetPreferences}
+        remindersEnabled={remindersEnabled}
+        remindersSupported={notificationsSupported()}
+        remindersDenied={notificationPermission() === "denied"}
+        onEnableReminders={enableRemindersFlow}
+        onDisableReminders={disableRemindersFlow}
+        onTestReminder={testReminder}
       />
 
       {/* GitHub import module. */}

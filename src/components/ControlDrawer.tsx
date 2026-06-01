@@ -35,6 +35,12 @@ interface ControlDrawerProps {
   effectsOn: boolean;
   onToggleEffects: () => void;
   onResetPreferences: () => void;
+  remindersEnabled: boolean;
+  remindersSupported: boolean;
+  remindersDenied: boolean;
+  onEnableReminders: () => void;
+  onDisableReminders: () => void;
+  onTestReminder: () => void;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -98,6 +104,12 @@ export function ControlDrawer({
   effectsOn,
   onToggleEffects,
   onResetPreferences,
+  remindersEnabled,
+  remindersSupported,
+  remindersDenied,
+  onEnableReminders,
+  onDisableReminders,
+  onTestReminder,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -269,6 +281,56 @@ export function ControlDrawer({
                     />
                   ))}
                 </div>
+              </div>
+
+              {/* Instagram posting reminders. */}
+              <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                  Recordatorios de Instagram
+                </span>
+                <p className="px-1 text-[11px] font-light text-zinc-500">
+                  Avisa los{" "}
+                  <span className="text-zinc-300">lunes, jueves y sábados</span>{" "}
+                  para subir 3 publicaciones.
+                </p>
+                {!remindersSupported ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    Tu navegador no soporta notificaciones.
+                  </p>
+                ) : remindersDenied ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    Permiso bloqueado. Actívalo en los ajustes del sitio en tu
+                    navegador.
+                  </p>
+                ) : remindersEnabled ? (
+                  <>
+                    <button
+                      onClick={onDisableReminders}
+                      className="flex items-center justify-between rounded-lg border border-lime-400/60 bg-lime-400/10 px-3 py-2 text-sm text-lime-200 transition-colors"
+                    >
+                      Recordatorios activados
+                      <span className="text-[11px]">Desactivar</span>
+                    </button>
+                    <button
+                      onClick={onTestReminder}
+                      className="text-[11px] text-zinc-500 transition-colors hover:text-zinc-300"
+                    >
+                      Enviar notificación de prueba
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={onEnableReminders}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                  >
+                    🔔 Activar recordatorios
+                  </button>
+                )}
+                <p className="px-1 text-[10px] font-light text-zinc-600">
+                  Mejor con la app instalada (PWA) en Chrome/Edge. En segundo
+                  plano el navegador decide el momento exacto; en iOS solo avisa
+                  con la app abierta.
+                </p>
               </div>
 
               {/* Actions. */}

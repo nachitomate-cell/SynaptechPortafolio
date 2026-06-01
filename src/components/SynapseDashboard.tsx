@@ -353,6 +353,19 @@ export function SynapseDashboard() {
     setToast(`GitHub actualizado · ${ok}/${targets.length} repos`);
   };
 
+  // Reset only the experience/view preferences (not the portfolio data).
+  const resetPreferences = () => {
+    setEffectsOn(true);
+    setScreensaverEnabled(true);
+    setView("giant");
+    setArrangement("ring");
+    setZoom(1);
+    setPresentation(false);
+    setFocusedCategory(null);
+    setOverrides({});
+    setToast("Preferencias restablecidas");
+  };
+
   const activeCount = projects.filter((p) => p.active !== false).length;
 
   const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
@@ -854,6 +867,7 @@ export function SynapseDashboard() {
         }}
         effectsOn={effectsOn}
         onToggleEffects={() => setEffectsOn((v) => !v)}
+        onResetPreferences={resetPreferences}
       />
 
       {/* GitHub import module. */}

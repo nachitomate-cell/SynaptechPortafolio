@@ -34,6 +34,7 @@ interface ControlDrawerProps {
   onStartAmbient: () => void;
   effectsOn: boolean;
   onToggleEffects: () => void;
+  onResetPreferences: () => void;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -96,6 +97,7 @@ export function ControlDrawer({
   onStartAmbient,
   effectsOn,
   onToggleEffects,
+  onResetPreferences,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -362,6 +364,12 @@ export function ControlDrawer({
                     />
                   </div>
                 )}
+                <button
+                  onClick={onResetPreferences}
+                  className="mt-1 text-[11px] text-zinc-500 transition-colors hover:text-zinc-300"
+                >
+                  Restablecer preferencias
+                </button>
               </div>
             </div>
           </motion.aside>

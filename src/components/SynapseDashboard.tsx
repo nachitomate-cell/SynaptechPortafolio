@@ -13,6 +13,7 @@ import { useCategoryLayout } from "../hooks/useCategoryLayout";
 import { useLabelDeclutter, type RawLabel } from "../hooks/useLabelDeclutter";
 import { useIdle } from "../hooks/useIdle";
 import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
+import { useLocalStorage } from "../hooks/useLocalStorage";
 import { AmbientBackground } from "./AmbientBackground";
 import { CentralNode } from "./CentralNode";
 import { CategoryNode } from "./CategoryNode";
@@ -84,9 +85,13 @@ export function SynapseDashboard() {
   const [hoverId, setHoverId] = useState<string | null>(null);
   const [spotlightId, setSpotlightId] = useState<string | null>(null);
   const [manualAmbient, setManualAmbient] = useState(false);
-  const [screensaverEnabled, setScreensaverEnabled] = useState(true);
+  // Experience preferences, remembered across reloads.
+  const [screensaverEnabled, setScreensaverEnabled] = useLocalStorage(
+    "synaptech-screensaver",
+    true,
+  );
   // Master switch for looping eye-candy (off = calmer + smoother on weak GPUs).
-  const [effectsOn, setEffectsOn] = useState(true);
+  const [effectsOn, setEffectsOn] = useLocalStorage("synaptech-effects", true);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).

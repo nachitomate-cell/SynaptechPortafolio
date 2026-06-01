@@ -64,6 +64,14 @@ hacia cada nodo.
   categoría va cada uno. Client-side puro (API pública de GitHub, sin backend);
   evita duplicados y precarga el link del repo. Botón "Restablecer portafolio"
   para volver a la semilla.
+- 🔎 **Búsqueda y filtros** — panel lateral para buscar por nombre/categoría y
+  filtrar por categoría, estado y "solo activas"; resalta las coincidencias y
+  atenúa el resto.
+- 📈 **Estados + resumen** — cada proyecto tiene un estado de ciclo de vida
+  (Planificación / En curso / Entregado / Mantenimiento / Pausado, editable en el
+  modal) y el panel muestra totales por categoría y por estado con barras.
+- 🎤 **Modo presentación + export/import** — vista solo-lectura (oculta edición)
+  para mostrar a clientes, y exportar/importar el portafolio como JSON (backup).
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.
@@ -113,6 +121,9 @@ src/
 │   ├── SynapseLink.tsx        # sinapsis SVG curva con pulso animado
 │   ├── LabelLayer.tsx         # capa de títulos decluttered + líneas guía
 │   ├── ViewToggle.tsx         # toggle "gigante" / "por categorías"
+│   ├── ControlDrawer.tsx      # búsqueda + filtros + resumen + acciones
+│   ├── GitHubImportModal.tsx  # importar repos públicos de GitHub
+│   ├── ProjectInfoModal.tsx   # detalle: estado, descripción, repo
 │   ├── AddProjectForm.tsx     # panel para añadir conexiones
 │   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
 ├── hooks/
@@ -124,7 +135,8 @@ src/
 ├── store/projectStore.ts      # estado de dominio (Zustand) + persistencia
 ├── data/
 │   ├── mockData.ts            # proyectos iniciales (semilla)
-│   └── categories.ts          # categorías por defecto + acentos
+│   ├── categories.ts          # categorías por defecto + acentos
+│   └── statuses.ts            # estados de ciclo de vida + colores
 └── types.ts
 
 scripts/

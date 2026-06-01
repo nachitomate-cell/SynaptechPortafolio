@@ -1,13 +1,18 @@
 import { useEffect } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { SynapseProject } from "../types";
+import { PROJECT_STATUSES, statusMeta } from "../data/statuses";
+import type { ProjectStatus } from "../data/statuses";
 
 interface ProjectInfoModalProps {
   project: SynapseProject | null;
   accent: string;
+  /** Read-only (presentation) mode hides the editing inputs. */
+  readOnly?: boolean;
   onClose: () => void;
   onRepoChange: (id: string, url: string) => void;
   onDescriptionChange: (id: string, text: string) => void;
+  onStatusChange: (id: string, status: ProjectStatus) => void;
 }
 
 /** Normalizes a user-entered repo value into an absolute https URL, or null. */
@@ -29,9 +34,11 @@ function toHref(raw: string | undefined): string | null {
 export function ProjectInfoModal({
   project,
   accent,
+  readOnly = false,
   onClose,
   onRepoChange,
   onDescriptionChange,
+  onStatusChange,
 }: ProjectInfoModalProps) {
   useEffect(() => {
     if (!project) return;
@@ -44,6 +51,7 @@ export function ProjectInfoModal({
 
   const href = toHref(project?.repoUrl);
   const active = project ? project.active !== false : false;
+  const st = statusMeta(project?.status);
 
   return (
     <AnimatePresence>
@@ -104,6 +112,12 @@ export function ProjectInfoModal({
                 </span>
               )}
               <span
+                className="rounded-full px-2.5 py-1 text-[11px] font-medium"
+                style={{ color: st.color, backgroundColor: `${st.color}1a` }}
+              >
+                {st.label}
+              </span>
+              <span
                 className={`rounded-full px-2.5 py-1 text-[11px] font-medium ${
                   active
                     ? "bg-lime-400/10 text-lime-300"
@@ -114,20 +128,48 @@ export function ProjectInfoModal({
               </span>
             </div>
 
+            {/* Status selector. */}
+            {!readOnly && (
+              <div className="mt-5">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                  Estado
+                </label>
+                <select
+                  value={project.status ?? "en-curso"}
+                  onChange={(e) =>
+                    onStatusChange(project.id, e.target.value as ProjectStatus)
+                  }
+                  className="w-full cursor-pointer rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors focus:border-lime-400/50"
+                >
+                  {PROJECT_STATUSES.map((s) => (
+                    <option key={s.id} value={s.id} className="bg-zinc-900">
+                      {s.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
             {/* Description. */}
-            <div className="mt-5">
+            <div className="mt-4">
               <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
                 Descripción
               </label>
-              <textarea
-                value={project.description ?? ""}
-                onChange={(e) =>
-                  onDescriptionChange(project.id, e.target.value)
-                }
-                rows={2}
-                placeholder="Añade una breve descripción del proyecto…"
-                className="w-full resize-none rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
-              />
+              {readOnly ? (
+                <p className="text-sm font-light leading-relaxed text-zinc-300">
+                  {project.description || "Sin descripción."}
+                </p>
+              ) : (
+                <textarea
+                  value={project.description ?? ""}
+                  onChange={(e) =>
+                    onDescriptionChange(project.id, e.target.value)
+                  }
+                  rows={2}
+                  placeholder="Añade una breve descripción del proyecto…"
+                  className="w-full resize-none rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
+                />
+              )}
             </div>
 
             {/* GitHub repository. */}
@@ -135,12 +177,14 @@ export function ProjectInfoModal({
               <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
                 Repositorio de GitHub
               </label>
-              <input
-                value={project.repoUrl ?? ""}
-                onChange={(e) => onRepoChange(project.id, e.target.value)}
-                placeholder="github.com/usuario/repositorio"
-                className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
-              />
+              {!readOnly && (
+                <input
+                  value={project.repoUrl ?? ""}
+                  onChange={(e) => onRepoChange(project.id, e.target.value)}
+                  placeholder="github.com/usuario/repositorio"
+                  className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
+                />
+              )}
 
               <a
                 href={href ?? undefined}

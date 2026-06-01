@@ -21,6 +21,8 @@ import { ViewToggle, type ViewMode } from "./ViewToggle";
 import { ZoomControls } from "./ZoomControls";
 import { ProjectInfoModal } from "./ProjectInfoModal";
 import { GitHubImportModal } from "./GitHubImportModal";
+import { ControlDrawer } from "./ControlDrawer";
+import type { ProjectStatus } from "../data/statuses";
 
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
@@ -45,6 +47,7 @@ export function SynapseDashboard() {
   const toggleActive = useProjectStore((s) => s.toggleActive);
   const updateProject = useProjectStore((s) => s.updateProject);
   const importProjects = useProjectStore((s) => s.importProjects);
+  const replaceProjects = useProjectStore((s) => s.replaceProjects);
   const resetProjects = useProjectStore((s) => s.resetProjects);
 
   const [view, setView] = useState<ViewMode>("giant");
@@ -54,6 +57,13 @@ export function SynapseDashboard() {
   const [infoId, setInfoId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const [presentation, setPresentation] = useState(false);
+  // Search & filters.
+  const [search, setSearch] = useState("");
+  const [filterCategories, setFilterCategories] = useState<Set<string>>(new Set());
+  const [filterStatuses, setFilterStatuses] = useState<Set<ProjectStatus>>(new Set());
+  const [onlyActive, setOnlyActive] = useState(false);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
@@ -150,6 +160,82 @@ export function SynapseDashboard() {
     setOverrides({});
   };
 
+  // ── Search & filters ──
+  const toggleInSet = <T,>(setter: React.Dispatch<React.SetStateAction<Set<T>>>) =>
+    (value: T) =>
+      setter((prev) => {
+        const next = new Set(prev);
+        next.has(value) ? next.delete(value) : next.add(value);
+        return next;
+      });
+  const toggleCategory = toggleInSet(setFilterCategories);
+  const toggleStatus = toggleInSet(setFilterStatuses);
+  const clearFilters = () => {
+    setSearch("");
+    setFilterCategories(new Set());
+    setFilterStatuses(new Set());
+    setOnlyActive(false);
+  };
+
+  const anyFilter =
+    search.trim() !== "" ||
+    filterCategories.size > 0 ||
+    filterStatuses.size > 0 ||
+    onlyActive;
+
+  const matches = (p: { name: string; category?: string; status?: ProjectStatus; active?: boolean }) => {
+    const q = search.trim().toLowerCase();
+    const textOk =
+      !q ||
+      p.name.toLowerCase().includes(q) ||
+      (p.category ?? "").toLowerCase().includes(q);
+    const catOk =
+      filterCategories.size === 0 || filterCategories.has(p.category ?? "");
+    const stOk =
+      filterStatuses.size === 0 ||
+      filterStatuses.has((p.status ?? "en-curso") as ProjectStatus);
+    const actOk = !onlyActive || p.active !== false;
+    return textOk && catOk && stOk && actOk;
+  };
+  const isDimmed = (p: { name: string; category?: string; status?: ProjectStatus; active?: boolean }) =>
+    anyFilter && !matches(p);
+
+  const setStatus = (id: string, status: ProjectStatus) =>
+    updateProject(id, { status });
+
+  // ── Export / Import ──
+  const exportJSON = () => {
+    const blob = new Blob([JSON.stringify(projects, null, 2)], {
+      type: "application/json",
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "synaptech-portafolio.json";
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const importJSON = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      try {
+        const data = JSON.parse(String(reader.result));
+        if (Array.isArray(data) && data.every((d) => d && d.id && d.name)) {
+          replaceProjects(data);
+          setSelectedId(null);
+          setInfoId(null);
+          setFocusedCategory(null);
+          setOverrides({});
+        } else {
+          alert("El archivo no tiene el formato esperado.");
+        }
+      } catch {
+        alert("No se pudo leer el JSON.");
+      }
+    };
+    reader.readAsText(file);
+  };
+
   const activeCount = projects.filter((p) => p.active !== false).length;
 
   const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
@@ -180,7 +266,7 @@ export function SynapseDashboard() {
         dirX: n.x - center.x,
         dirY: n.y - center.y,
         color: accentForCategory(n.category),
-        dim: n.active === false,
+        dim: n.active === false || isDimmed(n),
       }));
     }
     if (focusedCategory) {
@@ -192,7 +278,7 @@ export function SynapseDashboard() {
         dirX: n.x - center.x,
         dirY: n.y - center.y,
         color: focusAccent,
-        dim: n.active === false,
+        dim: n.active === false || isDimmed(n),
       }));
     }
     // Overview: only the categories are shown (no associated projects).
@@ -215,6 +301,12 @@ export function SynapseDashboard() {
     focusAccent,
     center.x,
     center.y,
+    // re-run when filters change so dimming stays in sync
+    search,
+    filterCategories,
+    filterStatuses,
+    onlyActive,
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   ]);
 
   const labels = useLabelDeclutter(
@@ -291,13 +383,34 @@ export function SynapseDashboard() {
           )}
         </div>
 
-        <div className="text-right">
-          <div className="text-xl font-semibold text-lime-300 sm:text-2xl">
-            {projects.length}
+        <div className="flex items-center gap-3">
+          {presentation && (
+            <span className="pointer-events-none hidden rounded-full bg-lime-400/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-lime-300 sm:inline">
+              Presentación
+            </span>
+          )}
+          <div className="text-right">
+            <div className="text-xl font-semibold text-lime-300 sm:text-2xl">
+              {projects.length}
+            </div>
+            <div className="text-[10px] font-light uppercase tracking-widest text-zinc-500 sm:text-[11px]">
+              Proyectos
+            </div>
           </div>
-          <div className="text-[10px] font-light uppercase tracking-widest text-zinc-500 sm:text-[11px]">
-            Proyectos
-          </div>
+          <button
+            onClick={() => setDrawerOpen(true)}
+            aria-label="Abrir panel de control"
+            title="Buscar, filtrar y gestionar"
+            className="pointer-events-auto flex h-9 w-9 items-center justify-center rounded-full border border-white/10 bg-zinc-900/60 text-zinc-300 backdrop-blur-md transition-colors hover:border-lime-400/40 hover:text-lime-200"
+          >
+            {/* Sliders icon. */}
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" aria-hidden>
+              <line x1="4" y1="8" x2="20" y2="8" />
+              <line x1="4" y1="16" x2="20" y2="16" />
+              <circle cx="9" cy="8" r="2" fill="#18181b" />
+              <circle cx="15" cy="16" r="2" fill="#18181b" />
+            </svg>
+          </button>
         </div>
       </header>
 
@@ -340,6 +453,8 @@ export function SynapseDashboard() {
                     index={i}
                     accent={accentForCategory(node.category)}
                     selected={selectedId === node.id}
+                    dimmed={isDimmed(node)}
+                    readOnly={presentation}
                     {...nodeHandlers}
                   />
                 ))}
@@ -410,6 +525,8 @@ export function SynapseDashboard() {
                     index={i}
                     accent={focusAccent}
                     selected={selectedId === node.id}
+                    dimmed={isDimmed(node)}
+                    readOnly={presentation}
                     {...nodeHandlers}
                   />
                 ))}
@@ -451,14 +568,36 @@ export function SynapseDashboard() {
         />
       </div>
 
-      {/* Control panel. */}
-      <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
-        <AddProjectForm
-          onAdd={addProject}
-          onReset={handleReset}
-          onOpenImport={() => setShowImport(true)}
-        />
-      </div>
+      {/* Control panel (hidden in presentation mode). */}
+      {!presentation && (
+        <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
+          <AddProjectForm
+            onAdd={addProject}
+            onReset={handleReset}
+            onOpenImport={() => setShowImport(true)}
+          />
+        </div>
+      )}
+
+      {/* Control drawer: search, filters, summary, actions. */}
+      <ControlDrawer
+        open={drawerOpen}
+        onClose={() => setDrawerOpen(false)}
+        projects={projects}
+        search={search}
+        onSearch={setSearch}
+        selectedCategories={filterCategories}
+        onToggleCategory={toggleCategory}
+        selectedStatuses={filterStatuses}
+        onToggleStatus={toggleStatus}
+        onlyActive={onlyActive}
+        onToggleOnlyActive={() => setOnlyActive((v) => !v)}
+        onClearFilters={clearFilters}
+        presentation={presentation}
+        onTogglePresentation={() => setPresentation((v) => !v)}
+        onExport={exportJSON}
+        onImport={importJSON}
+      />
 
       {/* GitHub import module. */}
       <GitHubImportModal
@@ -474,11 +613,13 @@ export function SynapseDashboard() {
       <ProjectInfoModal
         project={infoProject}
         accent={accentForCategory(infoProject?.category)}
+        readOnly={presentation}
         onClose={() => setInfoId(null)}
         onRepoChange={(id, url) => updateProject(id, { repoUrl: url })}
         onDescriptionChange={(id, text) =>
           updateProject(id, { description: text })
         }
+        onStatusChange={setStatus}
       />
     </div>
   );

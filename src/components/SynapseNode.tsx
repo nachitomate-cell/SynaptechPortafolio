@@ -22,6 +22,10 @@ interface SynapseNodeProps {
   zoom: number;
   /** Accent color for the rim/glow (defaults to brand green). */
   accent?: string;
+  /** Faded because it doesn't match the active filter/search. */
+  dimmed?: boolean;
+  /** Presentation mode: hide edit controls and disable dragging. */
+  readOnly?: boolean;
 }
 
 const INACTIVE_COLOR = "#52525b";
@@ -43,6 +47,8 @@ export function SynapseNode({
   selected,
   zoom,
   accent = "#a3d94a",
+  dimmed = false,
+  readOnly = false,
 }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -62,7 +68,7 @@ export function SynapseNode({
     lastRef.current = { x: e.clientX, y: e.clientY };
   };
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!dragging) return;
+    if (!dragging || readOnly) return;
     const dx = e.clientX - lastRef.current.x;
     const dy = e.clientY - lastRef.current.y;
     lastRef.current = { x: e.clientX, y: e.clientY };
@@ -92,7 +98,7 @@ export function SynapseNode({
       initial={{ scale: 0, opacity: 0, x: node.x, y: node.y }}
       animate={{
         scale: 1,
-        opacity: active ? 1 : 0.55,
+        opacity: dimmed ? 0.3 : active ? 1 : 0.55,
         x: node.x,
         y: node.y,
       }}
@@ -120,7 +126,7 @@ export function SynapseNode({
             buttons sit outside so they stay independently tappable. */}
         <div
           className={`relative flex h-7 w-7 touch-none items-center justify-center ${
-            dragging ? "cursor-grabbing" : "cursor-grab"
+            readOnly ? "cursor-pointer" : dragging ? "cursor-grabbing" : "cursor-grab"
           }`}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
@@ -153,7 +159,8 @@ export function SynapseNode({
           </motion.div>
         </div>
 
-        {/* Power toggle — top-left. */}
+        {/* Power toggle — top-left (hidden in presentation mode). */}
+        {!readOnly && (
         <motion.button
           type="button"
           aria-label={`${active ? "Desactivar" : "Activar"} sinapsis ${node.name}`}
@@ -176,8 +183,10 @@ export function SynapseNode({
         >
           ⏻
         </motion.button>
+        )}
 
-        {/* Delete control — top-right. */}
+        {/* Delete control — top-right (hidden in presentation mode). */}
+        {!readOnly && (
         <motion.button
           type="button"
           aria-label={`Borrar sinapsis ${node.name}`}
@@ -196,6 +205,7 @@ export function SynapseNode({
         >
           ✕
         </motion.button>
+        )}
 
         {/* Info control — bottom-right. */}
         <motion.button

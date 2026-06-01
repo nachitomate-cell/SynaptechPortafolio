@@ -21,6 +21,8 @@ interface ProjectState {
   deleteProject: (id: string) => void;
   toggleActive: (id: string) => void;
   updateProject: (id: string, patch: Partial<SynapseProject>) => void;
+  /** Replace the whole portfolio (e.g. importing a JSON backup). */
+  replaceProjects: (projects: SynapseProject[]) => void;
   resetProjects: () => void;
 }
 
@@ -77,6 +79,8 @@ export const useProjectStore = create<ProjectState>()(
             p.id === id ? { ...p, ...patch } : p,
           ),
         })),
+
+      replaceProjects: (projects) => set({ projects }),
 
       resetProjects: () => set({ projects: INITIAL_PROJECTS }),
     }),

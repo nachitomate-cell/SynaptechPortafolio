@@ -16,6 +16,8 @@ export interface SynapseProject {
   repoUrl?: string;
   /** Optional short description shown in the info modal. */
   description?: string;
+  /** Lifecycle status (see data/statuses.ts). Defaults to "en-curso". */
+  status?: import("./data/statuses").ProjectStatus;
 }
 
 /**

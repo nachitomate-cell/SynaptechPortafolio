@@ -11,6 +11,9 @@ import {
 } from "../hooks/useRadialLayout";
 import { useCategoryLayout } from "../hooks/useCategoryLayout";
 import { useLabelDeclutter, type RawLabel } from "../hooks/useLabelDeclutter";
+import { useIdle } from "../hooks/useIdle";
+import { usePrefersReducedMotion } from "../hooks/usePrefersReducedMotion";
+import { AmbientBackground } from "./AmbientBackground";
 import { CentralNode } from "./CentralNode";
 import { CategoryNode } from "./CategoryNode";
 import { SynapseNode } from "./SynapseNode";
@@ -31,6 +34,8 @@ import { parseRepoUrl, fetchRepoMeta } from "../lib/github";
 const ZOOM_MIN = 0.4;
 const ZOOM_MAX = 1.6;
 const ZOOM_STEP = 0.15;
+/** Inactivity before the ambient "screensaver" mode kicks in. */
+const IDLE_MS = 45_000;
 const clampZoom = (z: number) =>
   Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, Math.round(z * 100) / 100));
 
@@ -75,6 +80,11 @@ export function SynapseDashboard() {
   );
   const [toast, setToast] = useState<string | null>(null);
   const [ghBusy, setGhBusy] = useState(false);
+  // Interaction & ambient (screensaver) state.
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [spotlightId, setSpotlightId] = useState<string | null>(null);
+  const [manualAmbient, setManualAmbient] = useState(false);
+  const [screensaverEnabled, setScreensaverEnabled] = useState(true);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
@@ -104,6 +114,12 @@ export function SynapseDashboard() {
     const t = setTimeout(() => setToast(null), 2600);
     return () => clearTimeout(t);
   }, [toast]);
+
+  const reducedMotion = usePrefersReducedMotion();
+  // Pause idle detection while a modal/picker is open so it doesn't interrupt.
+  const idle = useIdle(IDLE_MS, screensaverEnabled && !infoId && !showImport);
+  // Ambient ("screensaver") mode: auto on idle, or started manually.
+  const ambient = manualAmbient || idle;
 
   const giant = useRadialLayout(projects, { width, height, arrangement });
   const grouped = useCategoryLayout(projects, { width, height });
@@ -340,6 +356,68 @@ export function SynapseDashboard() {
   const focusAccent = accentForCategory(focusedCategory ?? undefined);
   const focusActive = focusedProjects.filter((p) => p.active !== false).length;
 
+  // ── Hover / spotlight highlight ──
+  const highlightId = hoverId ?? spotlightId;
+  const highlightNode = highlightId
+    ? projects.find((p) => p.id === highlightId)
+    : null;
+  const highlightNeighbors = new Set(highlightNode?.connections ?? []);
+  const inHighlight = (id: string) =>
+    !highlightId || id === highlightId || highlightNeighbors.has(id);
+  const nodeDimmed = (n: { id: string } & Parameters<typeof isDimmed>[0]) =>
+    isDimmed(n) || (highlightId != null && !inHighlight(n.id));
+
+  // Cycle the spotlight across active nodes while in ambient mode.
+  useEffect(() => {
+    if (!ambient) {
+      setSpotlightId(null);
+      return;
+    }
+    const ids = giantNodes.filter((n) => n.active !== false).map((n) => n.id);
+    if (ids.length === 0) return;
+    let i = 0;
+    setSpotlightId(ids[0]);
+    const t = setInterval(() => {
+      i = (i + 1) % ids.length;
+      setSpotlightId(ids[i]);
+    }, 2800);
+    return () => clearInterval(t);
+  }, [ambient, giantNodes]);
+
+  // Ambient mode reads best in the giant view; remember & restore the previous.
+  const prevViewRef = useRef<ViewMode | null>(null);
+  useEffect(() => {
+    if (ambient) {
+      setDrawerOpen(false);
+      if (view !== "giant") {
+        prevViewRef.current = view;
+        setFocusedCategory(null);
+        setView("giant");
+      }
+    } else if (prevViewRef.current) {
+      setView(prevViewRef.current);
+      prevViewRef.current = null;
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [ambient]);
+
+  // A manually-started ambient session exits on the next user input.
+  useEffect(() => {
+    if (!manualAmbient) return;
+    const clear = () => setManualAmbient(false);
+    const evs = ["mousemove", "mousedown", "keydown", "wheel", "touchstart"];
+    // Delay so the click that started it doesn't immediately dismiss it.
+    const id = setTimeout(() => {
+      evs.forEach((e) =>
+        window.addEventListener(e, clear, { passive: true, once: true }),
+      );
+    }, 400);
+    return () => {
+      clearTimeout(id);
+      evs.forEach((e) => window.removeEventListener(e, clear));
+    };
+  }, [manualAmbient]);
+
   // Build the (non-overlapping) connection titles for the active view.
   const rawLabels = useMemo<RawLabel[]>(() => {
     if (view === "giant") {
@@ -421,7 +499,11 @@ export function SynapseDashboard() {
 
   return (
     <div className="synapse-backdrop relative h-screen w-screen overflow-hidden">
-      {/* Header. */}
+      {/* Living backdrop of drifting neurons. */}
+      <AmbientBackground intense={ambient} reducedMotion={reducedMotion} />
+
+      {/* Header (hidden in ambient mode). */}
+      {!ambient && (
       <header className="pointer-events-none absolute left-0 right-0 top-0 z-20 flex items-start justify-between gap-4 p-4 sm:p-6">
         <div>
           <h1 className="text-base font-semibold tracking-tight text-zinc-100 sm:text-lg">
@@ -498,6 +580,7 @@ export function SynapseDashboard() {
           </button>
         </div>
       </header>
+      )}
 
       {/* Canvas. */}
       <div
@@ -510,8 +593,20 @@ export function SynapseDashboard() {
             so a dense portfolio can be shrunk to declutter the screen. */}
         <motion.div
           className="absolute inset-0 origin-center"
-          animate={{ scale: zoom }}
-          transition={{ type: "spring", stiffness: 200, damping: 26 }}
+          animate={
+            ambient && !reducedMotion
+              ? {
+                  scale: [zoom, zoom * 1.04, zoom],
+                  x: [0, 18, 0, -18, 0],
+                  y: [0, -12, 0, 12, 0],
+                }
+              : { scale: zoom, x: 0, y: 0 }
+          }
+          transition={
+            ambient && !reducedMotion
+              ? { duration: 26, repeat: Infinity, ease: "easeInOut" }
+              : { type: "spring", stiffness: 200, damping: 26 }
+          }
         >
           {/* ── Vista: Sinapsis gigante ── */}
           {ready && view === "giant" && (
@@ -526,9 +621,15 @@ export function SynapseDashboard() {
                     to={{ x: node.x, y: node.y }}
                     color={accentForCategory(node.category)}
                     inactive={node.active === false}
+                    faded={highlightId != null && !inHighlight(node.id)}
                   />
                 ))}
-                <ProjectConnections nodes={giantNodes} isDimmed={isDimmed} />
+                <ProjectConnections
+                  nodes={giantNodes}
+                  isDimmed={isDimmed}
+                  highlightId={highlightId}
+                  reducedMotion={reducedMotion}
+                />
               </svg>
 
               <AnimatePresence>
@@ -539,7 +640,11 @@ export function SynapseDashboard() {
                     index={i}
                     accent={accentForCategory(node.category)}
                     selected={selectedId === node.id}
-                    dimmed={isDimmed(node)}
+                    dimmed={nodeDimmed(node)}
+                    highlighted={highlightId != null && inHighlight(node.id)}
+                    spotlight={ambient && spotlightId === node.id}
+                    onHover={setHoverId}
+                    reducedMotion={reducedMotion}
                     readOnly={presentation}
                     {...nodeHandlers}
                   />
@@ -599,9 +704,15 @@ export function SynapseDashboard() {
                     to={{ x: node.x, y: node.y }}
                     color={focusAccent}
                     inactive={node.active === false}
+                    faded={highlightId != null && !inHighlight(node.id)}
                   />
                 ))}
-                <ProjectConnections nodes={focusNodes} isDimmed={isDimmed} />
+                <ProjectConnections
+                  nodes={focusNodes}
+                  isDimmed={isDimmed}
+                  highlightId={highlightId}
+                  reducedMotion={reducedMotion}
+                />
               </svg>
 
               <AnimatePresence>
@@ -612,7 +723,11 @@ export function SynapseDashboard() {
                     index={i}
                     accent={focusAccent}
                     selected={selectedId === node.id}
-                    dimmed={isDimmed(node)}
+                    dimmed={nodeDimmed(node)}
+                    highlighted={highlightId != null && inHighlight(node.id)}
+                    spotlight={ambient && spotlightId === node.id}
+                    onHover={setHoverId}
+                    reducedMotion={reducedMotion}
                     readOnly={presentation}
                     {...nodeHandlers}
                   />
@@ -644,6 +759,7 @@ export function SynapseDashboard() {
       </div>
 
       {/* Zoom controls — right edge on phones, bottom-center on desktop. */}
+      {!ambient && (
       <div className="absolute right-3 top-1/2 z-20 -translate-y-1/2 sm:bottom-6 sm:left-1/2 sm:right-auto sm:top-auto sm:-translate-x-1/2 sm:translate-y-0">
         <ZoomControls
           zoom={zoom}
@@ -654,9 +770,30 @@ export function SynapseDashboard() {
           onReset={resetZoom}
         />
       </div>
+      )}
 
-      {/* Control panel (hidden in presentation mode). */}
-      {!presentation && (
+      {/* Ambient (screensaver) hint. */}
+      <AnimatePresence>
+        {ambient && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 1.2, delay: 0.6 }}
+            className="pointer-events-none absolute bottom-6 left-1/2 z-20 -translate-x-1/2 text-center"
+          >
+            <p className="text-[11px] font-light uppercase tracking-[0.25em] text-zinc-500">
+              Modo ambiente
+            </p>
+            <p className="mt-1 text-[10px] font-light text-zinc-600">
+              Mueve el cursor para volver
+            </p>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Control panel (hidden in presentation / ambient mode). */}
+      {!presentation && !ambient && (
         <div className="absolute bottom-4 left-4 z-20 sm:bottom-6 sm:left-6">
           <AddProjectForm
             onAdd={addProject}
@@ -688,6 +825,12 @@ export function SynapseDashboard() {
         onRefreshGitHub={refreshGitHub}
         ghBusy={ghBusy}
         shared={shared}
+        screensaverEnabled={screensaverEnabled}
+        onToggleScreensaver={() => setScreensaverEnabled((v) => !v)}
+        onStartAmbient={() => {
+          setDrawerOpen(false);
+          setManualAmbient(true);
+        }}
       />
 
       {/* GitHub import module. */}
@@ -717,7 +860,7 @@ export function SynapseDashboard() {
       />
 
       {/* Shared-view banner (read-only snapshot from a link). */}
-      {shared && (
+      {shared && !ambient && (
         <div className="pointer-events-auto absolute bottom-4 left-4 z-30 flex items-center gap-3 rounded-full border border-lime-400/30 bg-zinc-900/80 px-4 py-2 text-xs text-zinc-300 backdrop-blur-md sm:bottom-6 sm:left-6">
           <span className="flex items-center gap-1.5">
             <span className="text-lime-300">👁</span> Vista compartida · solo

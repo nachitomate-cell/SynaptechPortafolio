@@ -15,6 +15,8 @@ interface SynapseLinkProps {
   strength?: number;
   /** Inactive projects render as a faint dashed line with no pulse. */
   inactive?: boolean;
+  /** Dimmed because another node currently holds the spotlight. */
+  faded?: boolean;
 }
 
 /**
@@ -33,6 +35,7 @@ export function SynapseLink({
   color = "#a3d94a",
   strength = 1,
   inactive = false,
+  faded = false,
 }: SynapseLinkProps) {
   // Build a quadratic bezier that bows out perpendicular to the radius, giving
   // the organic curved-synapse look from the brand guidelines.
@@ -60,7 +63,7 @@ export function SynapseLink({
         d={d}
         fill="none"
         stroke="#52525b"
-        strokeOpacity={0.45}
+        strokeOpacity={faded ? 0.12 : 0.45}
         strokeWidth={1.2}
         strokeLinecap="round"
         strokeDasharray="3 7"
@@ -69,7 +72,9 @@ export function SynapseLink({
   }
 
   return (
-    <g>
+    <g
+      style={{ opacity: faded ? 0.16 : 1, transition: "opacity 0.3s ease" }}
+    >
       <defs>
         {/* Static fade: brighter at the core, dimmer at the node. */}
         <linearGradient

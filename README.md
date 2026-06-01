@@ -82,6 +82,14 @@ hacia cada nodo.
   salir. No toca los datos locales del visitante.
 - 🖼️ **Detalle enriquecido** — imagen de portada, link a demo en vivo y
   highlights por proyecto en el modal.
+- ✨ **Mejoras visuales/interactivas** — al pasar el cursor por un nodo se
+  iluminan él y sus conexiones (el resto se atenúa); tooltip con mini-ficha
+  (categoría, estado, ★); nodos "respirando", pulsos viajando por las conexiones
+  y un fondo animado de neuronas a la deriva. Respeta `prefers-reduced-motion`.
+- 🌙 **Modo ambiente / salvapantallas** — tras ~45 s de inactividad (o manual,
+  desde el panel) entra en una vista inmersiva sin controles: la red respira y
+  deriva suavemente mientras un foco recorre los proyectos uno a uno. Cualquier
+  movimiento del cursor vuelve a la app. Ideal para dejarlo de fondo (ver abajo).
 - 🏷️ **Títulos sin solapamiento** — las etiquetas se miden y se colocan con un
   algoritmo de *declutter* (separación vertical + línea guía) que garantiza que
   dos títulos de conexión nunca se superpongan, por densa que sea la red.
@@ -103,6 +111,23 @@ La red se inicializa con el portafolio actual de SynapTech, agrupado por categor
 - **Consultora Sonqollay** — SonqollayAPP, Base de datos Sonqollay, Extensión
   Label Studio
 - **Restaurantes** — ToHome, Calipso Concón
+
+## Usarlo como salvapantallas del sistema
+
+La app ya trae un **modo ambiente** integrado (se activa solo tras ~45 s sin
+actividad). Para convertirlo en el salvapantallas/fondo real del equipo, al ser
+una web basta apuntar una de estas utilidades a la URL desplegada:
+
+- **macOS** — [Plash](https://github.com/sindresorhus/Plash) (fondo de
+  escritorio web) o [WebViewScreenSaver](https://github.com/liquidx/webviewscreensaver)
+  como salvapantallas `.saver`.
+- **Windows** — [Lively Wallpaper](https://github.com/rocksdanister/lively)
+  acepta una URL como fondo/salvapantallas animado.
+- **Cualquier SO** — abre el sitio en el navegador en modo kiosco/pantalla
+  completa (`F11`) y desactiva la suspensión; el modo ambiente entra solo.
+
+> Un salvapantallas nativo "de verdad" (`.scr`/`.saver`) requeriría empaquetado
+> nativo aparte; las opciones de arriba logran el mismo efecto sin ese trabajo.
 
 ## Desarrollo
 
@@ -132,12 +157,13 @@ src/
 │   ├── LabelLayer.tsx         # capa de títulos decluttered + líneas guía
 │   ├── ViewToggle.tsx         # toggle "gigante" / "por categorías"
 │   ├── ControlDrawer.tsx      # búsqueda + filtros + resumen + acciones
-│   ├── ProjectConnections.tsx # aristas proyecto↔proyecto en el lienzo
+│   ├── AmbientBackground.tsx  # fondo animado de neuronas (canvas)
+│   ├── ProjectConnections.tsx # aristas proyecto↔proyecto + pulsos
 │   ├── GitHubImportModal.tsx  # importar repos públicos de GitHub
 │   ├── ProjectInfoModal.tsx   # detalle: estado, conexiones, demo, highlights
 │   ├── AddProjectForm.tsx     # panel para añadir conexiones
 │   └── PWAReloadPrompt.tsx    # toast de "offline ready" / "actualizar"
-├── hooks/
+├── hooks/                     # incluye useIdle + usePrefersReducedMotion
 │   ├── useRadialLayout.ts     # disposiciones ordenadas (anillo/espiral/…)
 │   ├── useCategoryLayout.ts   # layout en clusters por categoría
 │   ├── useLabelDeclutter.ts   # anti-solapamiento de etiquetas

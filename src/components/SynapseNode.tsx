@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import type { PositionedProject } from "../types";
+import { statusMeta } from "../data/statuses";
 
 interface SynapseNodeProps {
   node: PositionedProject;
@@ -26,6 +27,14 @@ interface SynapseNodeProps {
   dimmed?: boolean;
   /** Presentation mode: hide edit controls and disable dragging. */
   readOnly?: boolean;
+  /** Emphasized (it's the hovered/spotlit node or one of its neighbors). */
+  highlighted?: boolean;
+  /** It's the current focus of attention: show its tooltip + strongest glow. */
+  spotlight?: boolean;
+  /** Notify the parent which node the pointer is over (null on leave). */
+  onHover?: (id: string | null) => void;
+  /** Disable looping idle/breathing motion (reduced-motion preference). */
+  reducedMotion?: boolean;
 }
 
 const INACTIVE_COLOR = "#52525b";
@@ -49,6 +58,10 @@ export function SynapseNode({
   accent = "#a3d94a",
   dimmed = false,
   readOnly = false,
+  highlighted = false,
+  spotlight = false,
+  onHover,
+  reducedMotion = false,
 }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -59,6 +72,19 @@ export function SynapseNode({
   const active = node.active !== false;
   const color = active ? accent : INACTIVE_COLOR;
   const showControls = hovered || selected;
+  // Visual emphasis (bigger glow/sphere) without revealing the edit controls.
+  const boost = showControls || highlighted || spotlight;
+  const showTooltip = hovered || spotlight;
+  const st = statusMeta(node.status);
+
+  const enter = () => {
+    setHovered(true);
+    onHover?.(node.id);
+  };
+  const leave = () => {
+    setHovered(false);
+    onHover?.(null);
+  };
 
   const handlePointerDown = (e: React.PointerEvent) => {
     e.stopPropagation();
@@ -103,22 +129,23 @@ export function SynapseNode({
         y: node.y,
       }}
       exit={{ scale: 0, opacity: 0 }}
+      style={{ zIndex: boost ? 30 : undefined }}
       transition={{
         scale: { type: "spring", stiffness: 260, damping: 18, delay: index * 0.04 },
         opacity: { duration: 0.3 },
         x: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
         y: dragging ? { duration: 0 } : { type: "spring", stiffness: 120, damping: 20 },
       }}
-      onHoverStart={() => setHovered(true)}
-      onHoverEnd={() => setHovered(false)}
+      onHoverStart={enter}
+      onHoverEnd={leave}
     >
       {/* Idle floating so the network feels organic (paused while dragging). */}
       <motion.div
         className="relative flex flex-col items-center"
-        animate={active && !dragging ? { y: [0, -4, 0] } : { y: 0 }}
+        animate={active && !dragging && !reducedMotion ? { y: [0, -4, 0] } : { y: 0 }}
         transition={{
           duration: 3 + (index % 4) * 0.4,
-          repeat: active && !dragging ? Infinity : 0,
+          repeat: active && !dragging && !reducedMotion ? Infinity : 0,
           ease: "easeInOut",
         }}
       >
@@ -132,15 +159,26 @@ export function SynapseNode({
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
         >
-          {/* Accent glow aura, intensifies when active/selected. */}
+          {/* Accent glow aura: intensifies on focus, otherwise breathes gently. */}
           <motion.div
             className="absolute h-10 w-10 rounded-full blur-md"
             style={{ backgroundColor: color }}
-            animate={{
-              scale: showControls ? 1.6 : 1,
-              opacity: active ? (showControls ? 0.55 : 0.28) : 0.12,
-            }}
-            transition={{ duration: 0.3 }}
+            animate={
+              boost
+                ? { scale: 1.6, opacity: active ? 0.6 : 0.12 }
+                : active && !reducedMotion
+                  ? { scale: [1, 1.18, 1], opacity: [0.24, 0.38, 0.24] }
+                  : { scale: 1, opacity: active ? 0.28 : 0.12 }
+            }
+            transition={
+              boost || reducedMotion
+                ? { duration: 0.3 }
+                : {
+                    duration: 3.6 + (index % 5) * 0.5,
+                    repeat: Infinity,
+                    ease: "easeInOut",
+                  }
+            }
           />
 
           {/* The node — glossy dark sphere with an accent rim. */}
@@ -149,15 +187,50 @@ export function SynapseNode({
             style={{
               background:
                 "radial-gradient(circle at 35% 30%, #2c2c30 0%, #141417 60%, #070708 100%)",
-              boxShadow: active ? `0 0 10px ${color}` : "none",
+              boxShadow: active
+                ? `0 0 ${boost ? 16 : 10}px ${color}`
+                : "none",
               border: `2px solid ${color}`,
             }}
-            animate={{ scale: showControls || dragging ? 1.4 : 1 }}
+            animate={{ scale: boost || dragging ? 1.4 : 1 }}
             transition={{ type: "spring", stiffness: 300, damping: 15 }}
           >
             <span className="pointer-events-none absolute left-1/2 top-0.5 h-1 w-1.5 -translate-x-1/2 rounded-full bg-white/40 blur-[1px]" />
           </motion.div>
         </div>
+
+        {/* Hover/spotlight tooltip — a compact read-only mini-card. */}
+        <AnimatePresence>
+          {showTooltip && (
+            <motion.div
+              initial={{ opacity: 0, y: 4, scale: 0.92 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 4, scale: 0.92 }}
+              transition={{ duration: 0.16 }}
+              className="pointer-events-none absolute bottom-8 left-1/2 z-40 -translate-x-1/2 whitespace-nowrap rounded-lg border border-white/10 bg-zinc-900/95 px-3 py-2 text-center backdrop-blur-md"
+              style={{ boxShadow: `0 4px 20px ${accent}33` }}
+            >
+              <div className="text-xs font-semibold text-zinc-50">
+                {node.name}
+              </div>
+              <div className="mt-1 flex items-center justify-center gap-2 text-[10px] text-zinc-400">
+                {node.category && (
+                  <span style={{ color: accent }}>{node.category}</span>
+                )}
+                <span className="flex items-center gap-1">
+                  <span
+                    className="h-1.5 w-1.5 rounded-full"
+                    style={{ backgroundColor: st.color }}
+                  />
+                  {st.label}
+                </span>
+                {node.stars != null && (
+                  <span className="text-amber-300/90">★ {node.stars}</span>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Power toggle — top-left (hidden in presentation mode). */}
         {!readOnly && (

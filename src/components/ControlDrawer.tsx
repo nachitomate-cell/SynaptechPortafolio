@@ -29,6 +29,9 @@ interface ControlDrawerProps {
   ghBusy: boolean;
   /** When viewing a shared link, editing actions are hidden. */
   shared: boolean;
+  screensaverEnabled: boolean;
+  onToggleScreensaver: () => void;
+  onStartAmbient: () => void;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -86,6 +89,9 @@ export function ControlDrawer({
   onRefreshGitHub,
   ghBusy,
   shared,
+  screensaverEnabled,
+  onToggleScreensaver,
+  onStartAmbient,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -271,6 +277,22 @@ export function ControlDrawer({
                 >
                   🔗 Compartir enlace
                 </button>
+
+                <button
+                  onClick={onStartAmbient}
+                  className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                >
+                  ▶ Modo ambiente
+                </button>
+                <label className="flex cursor-pointer items-center justify-between px-1 text-xs text-zinc-400">
+                  <span>Salvapantallas automático</span>
+                  <input
+                    type="checkbox"
+                    checked={screensaverEnabled}
+                    onChange={onToggleScreensaver}
+                    className="accent-lime-400"
+                  />
+                </label>
                 {!shared && (
                   <button
                     onClick={onTogglePresentation}

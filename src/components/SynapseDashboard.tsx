@@ -85,6 +85,8 @@ export function SynapseDashboard() {
   const [spotlightId, setSpotlightId] = useState<string | null>(null);
   const [manualAmbient, setManualAmbient] = useState(false);
   const [screensaverEnabled, setScreensaverEnabled] = useState(true);
+  // Master switch for looping eye-candy (off = calmer + smoother on weak GPUs).
+  const [effectsOn, setEffectsOn] = useState(true);
   // Manual positions for dragged nodes (canvas-space, override the layout).
   const [overrides, setOverrides] = useState<Overrides>({});
   // While true, the label declutter does cheap placement only (perf during drag).
@@ -116,6 +118,8 @@ export function SynapseDashboard() {
   }, [toast]);
 
   const reducedMotion = usePrefersReducedMotion();
+  // Effective "calm" flag: OS preference or the manual effects switch.
+  const lowMotion = reducedMotion || !effectsOn;
   // Pause idle detection while a modal/picker is open so it doesn't interrupt.
   const idle = useIdle(IDLE_MS, screensaverEnabled && !infoId && !showImport);
   // Ambient ("screensaver") mode: auto on idle, or started manually.
@@ -499,8 +503,10 @@ export function SynapseDashboard() {
 
   return (
     <div className="synapse-backdrop relative h-screen w-screen overflow-hidden">
-      {/* Living backdrop of drifting neurons. */}
-      <AmbientBackground intense={ambient} reducedMotion={reducedMotion} />
+      {/* Living backdrop of drifting neurons (skipped when effects are off). */}
+      {effectsOn && (
+        <AmbientBackground intense={ambient} reducedMotion={reducedMotion} />
+      )}
 
       {/* Header (hidden in ambient mode). */}
       {!ambient && (
@@ -594,7 +600,7 @@ export function SynapseDashboard() {
         <motion.div
           className="absolute inset-0 origin-center"
           animate={
-            ambient && !reducedMotion
+            ambient && !lowMotion
               ? {
                   scale: [zoom, zoom * 1.04, zoom],
                   x: [0, 18, 0, -18, 0],
@@ -603,7 +609,7 @@ export function SynapseDashboard() {
               : { scale: zoom, x: 0, y: 0 }
           }
           transition={
-            ambient && !reducedMotion
+            ambient && !lowMotion
               ? { duration: 26, repeat: Infinity, ease: "easeInOut" }
               : { type: "spring", stiffness: 200, damping: 26 }
           }
@@ -622,13 +628,14 @@ export function SynapseDashboard() {
                     color={accentForCategory(node.category)}
                     inactive={node.active === false}
                     faded={highlightId != null && !inHighlight(node.id)}
+                    animated={!lowMotion}
                   />
                 ))}
                 <ProjectConnections
                   nodes={giantNodes}
                   isDimmed={isDimmed}
                   highlightId={highlightId}
-                  reducedMotion={reducedMotion}
+                  reducedMotion={lowMotion}
                 />
               </svg>
 
@@ -644,7 +651,7 @@ export function SynapseDashboard() {
                     highlighted={highlightId != null && inHighlight(node.id)}
                     spotlight={ambient && spotlightId === node.id}
                     onHover={setHoverId}
-                    reducedMotion={reducedMotion}
+                    reducedMotion={lowMotion}
                     readOnly={presentation}
                     {...nodeHandlers}
                   />
@@ -669,6 +676,7 @@ export function SynapseDashboard() {
                     to={{ x: cat.x, y: cat.y }}
                     color={cat.accent}
                     strength={1.8}
+                    animated={!lowMotion}
                   />
                 ))}
               </svg>
@@ -705,13 +713,14 @@ export function SynapseDashboard() {
                     color={focusAccent}
                     inactive={node.active === false}
                     faded={highlightId != null && !inHighlight(node.id)}
+                    animated={!lowMotion}
                   />
                 ))}
                 <ProjectConnections
                   nodes={focusNodes}
                   isDimmed={isDimmed}
                   highlightId={highlightId}
-                  reducedMotion={reducedMotion}
+                  reducedMotion={lowMotion}
                 />
               </svg>
 
@@ -727,7 +736,7 @@ export function SynapseDashboard() {
                     highlighted={highlightId != null && inHighlight(node.id)}
                     spotlight={ambient && spotlightId === node.id}
                     onHover={setHoverId}
-                    reducedMotion={reducedMotion}
+                    reducedMotion={lowMotion}
                     readOnly={presentation}
                     {...nodeHandlers}
                   />
@@ -831,6 +840,8 @@ export function SynapseDashboard() {
           setDrawerOpen(false);
           setManualAmbient(true);
         }}
+        effectsOn={effectsOn}
+        onToggleEffects={() => setEffectsOn((v) => !v)}
       />
 
       {/* GitHub import module. */}

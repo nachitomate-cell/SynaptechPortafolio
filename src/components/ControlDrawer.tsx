@@ -32,6 +32,8 @@ interface ControlDrawerProps {
   screensaverEnabled: boolean;
   onToggleScreensaver: () => void;
   onStartAmbient: () => void;
+  effectsOn: boolean;
+  onToggleEffects: () => void;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -92,6 +94,8 @@ export function ControlDrawer({
   screensaverEnabled,
   onToggleScreensaver,
   onStartAmbient,
+  effectsOn,
+  onToggleEffects,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -290,6 +294,20 @@ export function ControlDrawer({
                     type="checkbox"
                     checked={screensaverEnabled}
                     onChange={onToggleScreensaver}
+                    className="accent-lime-400"
+                  />
+                </label>
+                <label className="flex cursor-pointer items-center justify-between px-1 text-xs text-zinc-400">
+                  <span>
+                    Efectos visuales
+                    <span className="block text-[10px] text-zinc-600">
+                      Desactívalos si notas tirones
+                    </span>
+                  </span>
+                  <input
+                    type="checkbox"
+                    checked={effectsOn}
+                    onChange={onToggleEffects}
                     className="accent-lime-400"
                   />
                 </label>

@@ -85,7 +85,9 @@ hacia cada nodo.
 - ✨ **Mejoras visuales/interactivas** — al pasar el cursor por un nodo se
   iluminan él y sus conexiones (el resto se atenúa); tooltip con mini-ficha
   (categoría, estado, ★); nodos "respirando", pulsos viajando por las conexiones
-  y un fondo animado de neuronas a la deriva. Respeta `prefers-reduced-motion`.
+  y un fondo animado de neuronas a la deriva. Respeta `prefers-reduced-motion` y
+  hay un interruptor **"Efectos visuales"** en el panel para desactivar los
+  bucles de animación si el equipo va justo (mejora la fluidez).
 - 🌙 **Modo ambiente / salvapantallas** — tras ~45 s de inactividad (o manual,
   desde el panel) entra en una vista inmersiva sin controles: la red respira y
   deriva suavemente mientras un foco recorre los proyectos uno a uno. Cualquier

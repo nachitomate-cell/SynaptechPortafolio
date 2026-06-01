@@ -98,9 +98,6 @@ export function ProjectConnections({
                   ease: "easeInOut",
                   delay: (i % 5) * 0.4,
                 }}
-                style={{
-                  filter: "drop-shadow(0 0 3px rgba(146,200,58,0.8))",
-                }}
               />
             )}
           </Fragment>

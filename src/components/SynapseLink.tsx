@@ -17,6 +17,8 @@ interface SynapseLinkProps {
   inactive?: boolean;
   /** Dimmed because another node currently holds the spotlight. */
   faded?: boolean;
+  /** When false, skip the travelling pulse (reduced motion / perf). */
+  animated?: boolean;
 }
 
 /**
@@ -36,6 +38,7 @@ export function SynapseLink({
   strength = 1,
   inactive = false,
   faded = false,
+  animated = true,
 }: SynapseLinkProps) {
   // Build a quadratic bezier that bows out perpendicular to the radius, giving
   // the organic curved-synapse look from the brand guidelines.
@@ -115,24 +118,25 @@ export function SynapseLink({
 
       {/* Travelling pulse: a short visible dash sweeping core → node, repeating.
           pathLength={1} lets us express the dash + offset in normalized units. */}
-      <motion.path
-        d={d}
-        fill="none"
-        pathLength={1}
-        stroke={`url(#${pulseId})`}
-        strokeWidth={2.5 * strength}
-        strokeLinecap="round"
-        style={{ filter: "drop-shadow(0 0 4px rgba(146,200,58,0.9))" }}
-        strokeDasharray="0.18 1"
-        initial={{ strokeDashoffset: 1.18 }}
-        animate={{ strokeDashoffset: -0.18 }}
-        transition={{
-          duration: 2.4,
-          repeat: Infinity,
-          ease: "easeInOut",
-          delay: index * 0.35,
-        }}
-      />
+      {animated && (
+        <motion.path
+          d={d}
+          fill="none"
+          pathLength={1}
+          stroke={`url(#${pulseId})`}
+          strokeWidth={2.5 * strength}
+          strokeLinecap="round"
+          strokeDasharray="0.18 1"
+          initial={{ strokeDashoffset: 1.18 }}
+          animate={{ strokeDashoffset: -0.18 }}
+          transition={{
+            duration: 2.4,
+            repeat: Infinity,
+            ease: "easeInOut",
+            delay: index * 0.35,
+          }}
+        />
+      )}
     </g>
   );
 }

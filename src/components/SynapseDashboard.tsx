@@ -61,15 +61,22 @@ export function SynapseDashboard() {
   const replaceProjects = useProjectStore((s) => s.replaceProjects);
   const resetProjects = useProjectStore((s) => s.resetProjects);
 
-  const [view, setView] = useState<ViewMode>("giant");
-  const [arrangement, setArrangement] = useState<Arrangement>("ring");
-  const [zoom, setZoom] = useState(1);
+  // View preferences, remembered across reloads.
+  const [view, setView] = useLocalStorage<ViewMode>("synaptech-view", "giant");
+  const [arrangement, setArrangement] = useLocalStorage<Arrangement>(
+    "synaptech-arrangement",
+    "ring",
+  );
+  const [zoom, setZoom] = useLocalStorage("synaptech-zoom", 1);
   const [focusedCategory, setFocusedCategory] = useState<string | null>(null);
   const [infoId, setInfoId] = useState<string | null>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [showImport, setShowImport] = useState(false);
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const [presentation, setPresentation] = useState(false);
+  const [presentation, setPresentation] = useLocalStorage(
+    "synaptech-presentation",
+    false,
+  );
   // Search & filters.
   const [search, setSearch] = useState("");
   const [filterCategories, setFilterCategories] = useState<Set<string>>(new Set());

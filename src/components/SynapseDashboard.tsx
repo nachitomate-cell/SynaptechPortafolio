@@ -4,6 +4,9 @@ import type { PositionedProject } from "../types";
 import { useProjectStore } from "../store/projectStore";
 import { accentForCategory } from "../data/categories";
 import { useElementSize } from "../hooks/useElementSize";
+import { useBilling } from "../hooks/useBilling";
+import { usePush } from "../hooks/usePush";
+import { gcpProjectFor, formatCost } from "../data/gcpProjects";
 import {
   useRadialLayout,
   ARRANGEMENTS,
@@ -119,6 +122,35 @@ export function SynapseDashboard() {
   const [draggingActive, setDraggingActive] = useState(false);
   const dragTimer = useRef<ReturnType<typeof setTimeout>>();
   const [canvasRef, { width, height }] = useElementSize<HTMLDivElement>();
+
+  // Live GCP month-to-date billing, keyed by frontend node id (see useBilling).
+  const billing = useBilling();
+  // Formatted cost for a single node ("$12.40"), or undefined when unknown.
+  const costLabel = (nodeId: string): string | undefined => {
+    const c = billing.byNode[nodeId];
+    return c != null ? formatCost(c, billing.currency) : undefined;
+  };
+  // Formatted cost for a category hub: sum of its projects, de-duplicating GCP
+  // projects shared by several nodes so a shared cost is counted only once.
+  const categoryCostLabel = (
+    catProjects: { id: string }[],
+  ): string | undefined => {
+    const seen = new Set<string>();
+    let sum = 0;
+    let any = false;
+    for (const p of catProjects) {
+      const c = billing.byNode[p.id];
+      if (c == null) continue;
+      any = true;
+      const gcp = gcpProjectFor(p.id);
+      if (gcp) {
+        if (seen.has(gcp)) continue;
+        seen.add(gcp);
+      }
+      sum += c;
+    }
+    return any ? formatCost(sum, billing.currency) : undefined;
+  };
 
   // A shared link shows a read-only snapshot without touching the user's data.
   const shared = sharedProjects !== null;
@@ -422,6 +454,31 @@ export function SynapseDashboard() {
     setToast(ok ? "Notificación de prueba enviada" : "Activa los recordatorios primero");
   };
 
+  // ── Web Push (alertas de gasto, Instagram y resumen, vía servidor) ──
+  const push = usePush();
+  const enablePushFlow = async () => {
+    const res = await push.enable();
+    if (res.ok) {
+      setToast("Notificaciones push activadas");
+    } else if (res.reason === "denied") {
+      setToast("Permiso de notificaciones denegado");
+    } else if (res.reason === "no-vapid") {
+      setToast("Falta configurar la clave VAPID");
+    } else if (res.reason === "unsupported") {
+      setToast("Tu navegador no soporta Web Push");
+    } else {
+      setToast("No se pudo activar el push");
+    }
+  };
+  const disablePushFlow = async () => {
+    await push.disable();
+    setToast("Notificaciones push desactivadas");
+  };
+  const testPushFlow = async () => {
+    const ok = await push.test();
+    setToast(ok ? "Push de prueba enviado" : "Activa el push primero");
+  };
+
   const activeCount = projects.filter((p) => p.active !== false).length;
 
   const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
@@ -515,6 +572,7 @@ export function SynapseDashboard() {
         dirY: n.y - center.y,
         color: accentForCategory(n.category),
         dim: n.active === false || isDimmed(n),
+        cost: costLabel(n.id),
       }));
     }
     if (focusedCategory) {
@@ -527,6 +585,7 @@ export function SynapseDashboard() {
         dirY: n.y - center.y,
         color: focusAccent,
         dim: n.active === false || isDimmed(n),
+        cost: costLabel(n.id),
       }));
     }
     // Overview: only the categories are shown (no associated projects).
@@ -539,6 +598,7 @@ export function SynapseDashboard() {
       dirY: cat.y - center.y,
       color: cat.accent,
       emphasis: true,
+      cost: categoryCostLabel(cat.projects),
     }));
   }, [
     view,
@@ -549,6 +609,9 @@ export function SynapseDashboard() {
     focusAccent,
     center.x,
     center.y,
+    // re-run when billing data arrives so costs appear under the titles
+    billing.byNode,
+    billing.currency,
     // re-run when filters change so dimming stays in sync
     search,
     filterCategories,
@@ -642,6 +705,29 @@ export function SynapseDashboard() {
             <span className="pointer-events-none hidden rounded-full bg-lime-400/10 px-2.5 py-1 text-[10px] font-medium uppercase tracking-wider text-lime-300 sm:inline">
               Presentación
             </span>
+          )}
+          {/* GCP month-to-date total across every project. */}
+          {(billing.total > 0 || billing.loading) && (
+            <div
+              className="pointer-events-none flex flex-col items-end"
+              title={
+                billing.updatedAt
+                  ? `Gasto GCP del mes · actualizado ${new Date(
+                      billing.updatedAt,
+                    ).toLocaleString("es-CL")}`
+                  : "Gasto GCP del mes en curso"
+              }
+            >
+              <div className="flex items-center gap-1.5 text-sm font-semibold tabular-nums text-lime-300/90 sm:text-base">
+                <span className="text-[11px] text-lime-300/60">☁</span>
+                {billing.loading && billing.total === 0
+                  ? "···"
+                  : formatCost(billing.total, billing.currency)}
+              </div>
+              <div className="text-[10px] font-light uppercase tracking-widest text-zinc-500 sm:text-[11px]">
+                Gasto GCP / mes
+              </div>
+            </div>
           )}
           <div className="text-right">
             <div className="text-xl font-semibold text-lime-300 sm:text-2xl">
@@ -930,6 +1016,15 @@ export function SynapseDashboard() {
         onEnableReminders={enableRemindersFlow}
         onDisableReminders={disableRemindersFlow}
         onTestReminder={testReminder}
+        pushSupported={push.supported}
+        pushConfigured={push.configured}
+        pushSubscribed={push.subscribed}
+        pushBusy={push.busy}
+        pushNeedsInstall={push.needsInstall}
+        pushDenied={push.permission === "denied"}
+        onEnablePush={enablePushFlow}
+        onDisablePush={disablePushFlow}
+        onTestPush={testPushFlow}
       />
 
       {/* GitHub import module. */}

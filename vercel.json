@@ -1,0 +1,14 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": "vite",
+  "functions": {
+    "api/billing.ts": { "maxDuration": 30 },
+    "api/cron/billing-alert.ts": { "maxDuration": 30 },
+    "api/cron/weekly-summary.ts": { "maxDuration": 30 }
+  },
+  "crons": [
+    { "path": "/api/cron/ig-reminder", "schedule": "0 13 * * 1,4,6" },
+    { "path": "/api/cron/billing-alert", "schedule": "0 12 * * *" },
+    { "path": "/api/cron/weekly-summary", "schedule": "0 12 * * 1" }
+  ]
+}

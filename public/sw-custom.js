@@ -58,6 +58,30 @@ self.addEventListener("periodicsync", (event) => {
   if (event.tag === IG_REMINDER_TAG) event.waitUntil(igMaybeNotify());
 });
 
+/* ── Web Push (server-initiated) ──────────────────────────────────────────
+   Real push: the server (Vercel cron) sends a message that wakes the SW even
+   when the app is closed — and, unlike periodic sync, this works on iOS 16.4+
+   (installed PWA). Payload shape comes from api/_lib/push.ts (PushPayload). */
+self.addEventListener("push", (event) => {
+  let payload = {};
+  try {
+    payload = event.data ? event.data.json() : {};
+  } catch {
+    payload = { title: "SynapTech", body: event.data ? event.data.text() : "" };
+  }
+  const title = payload.title || "SynapTech";
+  event.waitUntil(
+    self.registration.showNotification(title, {
+      body: payload.body || "",
+      tag: payload.tag,
+      icon: "/pwa-192x192.png",
+      badge: "/pwa-192x192.png",
+      requireInteraction: !!payload.requireInteraction,
+      data: { url: payload.url || "/" },
+    }),
+  );
+});
+
 self.addEventListener("message", (event) => {
   if (event.data === "check-ig-reminder") {
     event.waitUntil(igMaybeNotify());
@@ -76,20 +100,24 @@ self.addEventListener("message", (event) => {
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || IG_URL;
+  const url = (event.notification.data && event.notification.data.url) || "/";
   event.waitUntil(
     (async () => {
+      // An explicit external action (e.g. "Abrir Instagram") always opens a tab.
       if (event.action === "open-ig") {
         await self.clients.openWindow(url);
         return;
       }
+      // For an in-app target, reuse an open window when there is one; otherwise
+      // open the target URL (covers external links like Instagram too).
       const wins = await self.clients.matchAll({
         type: "window",
         includeUncontrolled: true,
       });
-      const open = wins.find((w) => "focus" in w);
+      const sameOrigin = url.startsWith("/") || url.startsWith(self.location.origin);
+      const open = sameOrigin ? wins.find((w) => "focus" in w) : null;
       if (open) await open.focus();
-      else await self.clients.openWindow("/");
+      else await self.clients.openWindow(url);
     })(),
   );
 });

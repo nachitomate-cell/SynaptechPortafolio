@@ -46,22 +46,37 @@ export function LabelLayer({ labels }: LabelLayerProps) {
             whiteSpace: "nowrap",
           }}
         >
-          {l.emphasis ? (
-            <span
-              className="text-[11px] font-semibold uppercase tracking-wider"
-              style={{ color: l.color, opacity: l.dim ? 0.5 : 1 }}
-            >
-              {l.text}
-            </span>
-          ) : (
-            <span
-              className={`text-xs font-medium ${
-                l.dim ? "text-zinc-500" : "text-zinc-200"
-              }`}
-            >
-              {l.text}
-            </span>
-          )}
+          <div
+            className="flex flex-col"
+            style={{ alignItems: l.anchor === "end" ? "flex-end" : "flex-start" }}
+          >
+            {l.emphasis ? (
+              <span
+                className="text-[11px] font-semibold uppercase tracking-wider"
+                style={{ color: l.color, opacity: l.dim ? 0.5 : 1 }}
+              >
+                {l.text}
+              </span>
+            ) : (
+              <span
+                className={`text-xs font-medium ${
+                  l.dim ? "text-zinc-500" : "text-zinc-200"
+                }`}
+              >
+                {l.text}
+              </span>
+            )}
+            {/* Month-to-date GCP cost — a tenuous neon-green hint so it reads as
+                metadata, never competing with the project title. */}
+            {l.cost && (
+              <span
+                className="mt-0.5 text-[10px] font-medium tabular-nums leading-none text-lime-300/45"
+                style={{ opacity: l.dim ? 0.4 : 1 }}
+              >
+                {l.cost}
+              </span>
+            )}
+          </div>
         </div>
       ))}
     </div>

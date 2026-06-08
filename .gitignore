@@ -4,6 +4,12 @@ dist-ssr
 *.local
 .DS_Store
 
+# Local secrets (GCP service account, etc.) — never commit
+.env
+.env.*
+!.env.example
+.vercel
+
 # Build / TS incremental artifacts
 *.tsbuildinfo
 vite.config.js

@@ -16,6 +16,8 @@ export interface RawLabel {
   emphasis?: boolean;
   /** Inactive projects render dimmed. */
   dim?: boolean;
+  /** Pre-formatted GCP cost shown under the title (e.g. "$12.40"); omit to hide. */
+  cost?: string;
 }
 
 /** A label after placement + overlap resolution. */
@@ -34,6 +36,8 @@ export interface PlacedLabel {
   anchor: "start" | "end";
   /** True when the label was nudged off its node — draw a leader line. */
   displaced: boolean;
+  /** Pre-formatted GCP cost shown under the title (e.g. "$12.40"); omit to hide. */
+  cost?: string;
 }
 
 const LABEL_HEIGHT = 16;
@@ -128,6 +132,7 @@ export function useLabelDeclutter(
         ly: cy,
         anchor: p.anchor,
         displaced: Math.abs(cy - p.baseY) > 5,
+        cost: p.raw.cost,
       } satisfies PlacedLabel;
     });
   }, [labels, size.width, size.height, skipSeparation]);

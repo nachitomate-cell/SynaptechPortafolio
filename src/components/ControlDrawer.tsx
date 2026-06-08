@@ -41,6 +41,16 @@ interface ControlDrawerProps {
   onEnableReminders: () => void;
   onDisableReminders: () => void;
   onTestReminder: () => void;
+  // Web Push (server-initiated; works on iOS installed PWA).
+  pushSupported: boolean;
+  pushConfigured: boolean;
+  pushSubscribed: boolean;
+  pushBusy: boolean;
+  pushNeedsInstall: boolean;
+  pushDenied: boolean;
+  onEnablePush: () => void;
+  onDisablePush: () => void;
+  onTestPush: () => void;
 }
 
 /** A labelled count row with a proportional bar. */
@@ -110,6 +120,15 @@ export function ControlDrawer({
   onEnableReminders,
   onDisableReminders,
   onTestReminder,
+  pushSupported,
+  pushConfigured,
+  pushSubscribed,
+  pushBusy,
+  pushNeedsInstall,
+  pushDenied,
+  onEnablePush,
+  onDisablePush,
+  onTestPush,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
 
@@ -331,6 +350,63 @@ export function ControlDrawer({
                   plano el navegador decide el momento exacto; en iOS solo avisa
                   con la app abierta.
                 </p>
+              </div>
+
+              {/* Web Push (notificaciones del servidor). */}
+              <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
+                <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                  Notificaciones push
+                </span>
+                <p className="px-1 text-[11px] font-light text-zinc-500">
+                  Alertas de{" "}
+                  <span className="text-zinc-300">gasto GCP</span>, recordatorios
+                  de Instagram y resumen semanal — incluso con la app cerrada y en
+                  iPhone.
+                </p>
+                {!pushSupported ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    Tu navegador no soporta Web Push.
+                  </p>
+                ) : !pushConfigured ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    Falta configurar la clave VAPID (VITE_VAPID_PUBLIC_KEY).
+                  </p>
+                ) : pushNeedsInstall ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    En iPhone: añade la app a la pantalla de inicio y ábrela desde
+                    ahí para activar las notificaciones.
+                  </p>
+                ) : pushDenied ? (
+                  <p className="px-1 text-[11px] text-amber-300/80">
+                    Permiso bloqueado. Actívalo en los ajustes del sitio.
+                  </p>
+                ) : pushSubscribed ? (
+                  <>
+                    <button
+                      onClick={onDisablePush}
+                      disabled={pushBusy}
+                      className="flex items-center justify-between rounded-lg border border-lime-400/60 bg-lime-400/10 px-3 py-2 text-sm text-lime-200 transition-colors disabled:opacity-50"
+                    >
+                      Push activado
+                      <span className="text-[11px]">Desactivar</span>
+                    </button>
+                    <button
+                      onClick={onTestPush}
+                      disabled={pushBusy}
+                      className="text-[11px] text-zinc-500 transition-colors hover:text-zinc-300 disabled:opacity-50"
+                    >
+                      Enviar push de prueba
+                    </button>
+                  </>
+                ) : (
+                  <button
+                    onClick={onEnablePush}
+                    disabled={pushBusy}
+                    className="flex items-center justify-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200 disabled:opacity-50"
+                  >
+                    {pushBusy ? "Activando…" : "📲 Activar notificaciones push"}
+                  </button>
+                )}
               </div>
 
               {/* Actions. */}

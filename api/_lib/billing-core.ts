@@ -35,7 +35,25 @@ function startOfMonthUTC(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1));
 }
 
-export async function getBilling(): Promise<BillingResponse> {
+export interface BillingRange {
+  start: Date;
+  end: Date;
+}
+
+/** [first day of last month, first day of this month) — for the monthly close. */
+export function previousMonthRange(now = new Date()): BillingRange {
+  return {
+    start: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth() - 1, 1)),
+    end: new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)),
+  };
+}
+
+/**
+ * Month-to-date spend by default; pass a `range` to query a specific window
+ * (e.g. the previous calendar month). The `month` label is derived from the
+ * range start.
+ */
+export async function getBilling(range?: BillingRange): Promise<BillingResponse> {
   const projectId = readEnv("GCP_PROJECT_ID");
   const clientEmail = readEnv("GCP_CLIENT_EMAIL");
   const privateKey = readEnv("GCP_PRIVATE_KEY").replace(/\\n/g, "\n");
@@ -58,7 +76,8 @@ export async function getBilling(): Promise<BillingResponse> {
   });
 
   const now = new Date();
-  const start = startOfMonthUTC(now);
+  const start = range?.start ?? startOfMonthUTC(now);
+  const end = range?.end ?? now;
 
   const unioned = tables
     .map(
@@ -84,7 +103,7 @@ export async function getBilling(): Promise<BillingResponse> {
 
   const [rows] = await bigquery.query({
     query,
-    params: { start: start.toISOString(), end: now.toISOString() },
+    params: { start: start.toISOString(), end: end.toISOString() },
     types: { start: "TIMESTAMP", end: "TIMESTAMP" },
   });
 

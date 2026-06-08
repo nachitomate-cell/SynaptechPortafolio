@@ -110,6 +110,16 @@ export async function countSubscriptions(): Promise<number> {
   return (await listSubscriptions()).length;
 }
 
+/** Read a JSON value previously stored with setStored (null if absent). */
+export async function getStored<T>(key: string): Promise<T | null> {
+  return (await getRedis().get<T>(key)) ?? null;
+}
+
+/** Persist a JSON value (used e.g. for the daily billing snapshot). */
+export async function setStored(key: string, value: unknown): Promise<void> {
+  await getRedis().set(key, value as string);
+}
+
 /**
  * Atomic "do this only once per key" latch (Redis SET NX). Returns true the
  * first time a given key is seen, false afterwards — used so the billing alert

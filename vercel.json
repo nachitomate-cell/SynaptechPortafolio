@@ -4,11 +4,19 @@
   "functions": {
     "api/billing.ts": { "maxDuration": 30 },
     "api/cron/billing-alert.ts": { "maxDuration": 30 },
+    "api/cron/billing-daily.ts": { "maxDuration": 30 },
+    "api/cron/billing-spike.ts": { "maxDuration": 30 },
+    "api/cron/monthly-close.ts": { "maxDuration": 30 },
     "api/cron/weekly-summary.ts": { "maxDuration": 30 }
   },
   "crons": [
+    { "path": "/api/cron/daily-motivation", "schedule": "0 11 * * *" },
     { "path": "/api/cron/ig-reminder", "schedule": "0 13 * * 1,4,6" },
+    { "path": "/api/cron/weekly-summary", "schedule": "0 12 * * 1" },
+    { "path": "/api/cron/projects-status", "schedule": "0 13 * * 3" },
     { "path": "/api/cron/billing-alert", "schedule": "0 12 * * *" },
-    { "path": "/api/cron/weekly-summary", "schedule": "0 12 * * 1" }
+    { "path": "/api/cron/billing-daily", "schedule": "30 12 * * *" },
+    { "path": "/api/cron/billing-spike", "schedule": "45 12 * * *" },
+    { "path": "/api/cron/monthly-close", "schedule": "0 13 1 * *" }
   ]
 }

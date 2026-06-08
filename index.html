@@ -29,8 +29,205 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <style>
+      /* ── Splash screen ──────────────────────────────────────────────────
+         Inlined so it paints instantly (before the JS bundle runs) and mirrors
+         the dashboard's synapse aesthetic: a glossy dark core with a neon-green
+         halo, a slow dashed ring and faint radiating connections. main.tsx
+         fades it out once React has mounted. */
+      #splash {
+        position: fixed;
+        inset: 0;
+        z-index: 9999;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2.5rem;
+        background:
+          radial-gradient(
+            circle at 50% 45%,
+            rgba(146, 200, 58, 0.08) 0%,
+            rgba(9, 9, 11, 0) 55%
+          ),
+          #09090b;
+        font-family: Inter, system-ui, -apple-system, sans-serif;
+        transition: opacity 0.45s ease;
+      }
+      #splash.is-hidden {
+        opacity: 0;
+        visibility: hidden;
+      }
+      .splash-stage {
+        position: relative;
+        width: 280px;
+        height: 280px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      /* Faint radiating connections (drawn behind everything). */
+      .splash-net {
+        position: absolute;
+        inset: 0;
+        animation: splash-breathe 4s ease-in-out infinite;
+      }
+      /* Breathing halo. */
+      .splash-halo {
+        position: absolute;
+        width: 190px;
+        height: 190px;
+        border-radius: 50%;
+        background: rgba(146, 200, 58, 0.2);
+        filter: blur(46px);
+        animation: splash-halo 4s ease-in-out infinite;
+      }
+      /* Slow dashed accent ring. */
+      .splash-ring {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        border-radius: 50%;
+        border: 1px dashed rgba(146, 200, 58, 0.3);
+        animation: splash-spin 24s linear infinite;
+      }
+      /* Glossy dark core with neon rim. */
+      .splash-core {
+        position: relative;
+        width: 116px;
+        height: 116px;
+        border-radius: 50%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: radial-gradient(
+          circle at 35% 30%,
+          #2a2a2e 0%,
+          #131316 55%,
+          #060607 100%
+        );
+        border: 1px solid rgba(146, 200, 58, 0.5);
+        animation: splash-glow 3.2s ease-in-out infinite;
+      }
+      .splash-core::before {
+        content: "";
+        position: absolute;
+        top: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 56px;
+        height: 26px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        filter: blur(10px);
+      }
+      .splash-title {
+        font-size: 15px;
+        font-weight: 600;
+        letter-spacing: -0.01em;
+        color: #c6ef7a;
+      }
+      .splash-sub {
+        margin-top: 1px;
+        font-size: 10px;
+        font-weight: 300;
+        text-transform: uppercase;
+        letter-spacing: 0.2em;
+        color: rgba(163, 217, 74, 0.85);
+      }
+      .splash-caption {
+        font-size: 11px;
+        font-weight: 300;
+        letter-spacing: 0.25em;
+        text-transform: uppercase;
+        color: #71717a;
+      }
+      .splash-caption .dot {
+        opacity: 0;
+        animation: splash-dots 1.4s infinite;
+      }
+      .splash-caption .dot:nth-child(2) { animation-delay: 0.2s; }
+      .splash-caption .dot:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes splash-halo {
+        0%, 100% { transform: scale(1); opacity: 0.35; }
+        50% { transform: scale(1.18); opacity: 0.6; }
+      }
+      @keyframes splash-breathe {
+        0%, 100% { opacity: 0.55; transform: scale(1); }
+        50% { opacity: 0.9; transform: scale(1.04); }
+      }
+      @keyframes splash-spin {
+        to { transform: rotate(360deg); }
+      }
+      @keyframes splash-glow {
+        0%, 100% {
+          box-shadow: 0 0 20px rgba(146, 200, 58, 0.45),
+            0 0 60px rgba(146, 200, 58, 0.25);
+        }
+        50% {
+          box-shadow: 0 0 32px rgba(146, 200, 58, 0.7),
+            0 0 90px rgba(146, 200, 58, 0.4);
+        }
+      }
+      @keyframes splash-dots {
+        0%, 80%, 100% { opacity: 0; }
+        40% { opacity: 1; }
+      }
+      /* Per-node pulse on the network dots. */
+      .splash-net circle.node {
+        animation: splash-node 2.4s ease-in-out infinite;
+        transform-box: fill-box;
+        transform-origin: center;
+      }
+      @keyframes splash-node {
+        0%, 100% { opacity: 0.35; r: 3; }
+        50% { opacity: 0.9; r: 4.2; }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        #splash *,
+        .splash-net circle.node {
+          animation: none !important;
+        }
+      }
+    </style>
   </head>
   <body>
+    <!-- Splash (replaced by the React app once mounted; see main.tsx). -->
+    <div id="splash">
+      <div class="splash-stage">
+        <svg class="splash-net" viewBox="0 0 280 280" aria-hidden="true">
+          <g stroke="rgba(146,200,58,0.22)" stroke-width="1.2">
+            <line x1="140" y1="140" x2="235" y2="140" />
+            <line x1="140" y1="140" x2="187" y2="58" />
+            <line x1="140" y1="140" x2="93" y2="58" />
+            <line x1="140" y1="140" x2="45" y2="140" />
+            <line x1="140" y1="140" x2="93" y2="222" />
+            <line x1="140" y1="140" x2="187" y2="222" />
+          </g>
+          <g fill="#a3d94a">
+            <circle class="node" cx="235" cy="140" r="3" style="animation-delay:0s" />
+            <circle class="node" cx="187" cy="58" r="3" style="animation-delay:0.4s" />
+            <circle class="node" cx="93" cy="58" r="3" style="animation-delay:0.8s" />
+            <circle class="node" cx="45" cy="140" r="3" style="animation-delay:1.2s" />
+            <circle class="node" cx="93" cy="222" r="3" style="animation-delay:1.6s" />
+            <circle class="node" cx="187" cy="222" r="3" style="animation-delay:2s" />
+          </g>
+        </svg>
+        <div class="splash-halo"></div>
+        <div class="splash-ring"></div>
+        <div class="splash-core">
+          <span class="splash-title">SynapTech</span>
+          <span class="splash-sub">SpA</span>
+        </div>
+      </div>
+      <div class="splash-caption">
+        Conectando sinapsis<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -2,6 +2,7 @@ import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { PositionedProject } from "../types";
 import { statusMeta } from "../data/statuses";
+import { formatCost } from "../data/gcpProjects";
 
 interface SynapseNodeProps {
   node: PositionedProject;
@@ -35,6 +36,10 @@ interface SynapseNodeProps {
   onHover?: (id: string | null) => void;
   /** Disable looping idle/breathing motion (reduced-motion preference). */
   reducedMotion?: boolean;
+  /** Month-to-date GCP cost for this node (for the tooltip cost/margin line). */
+  cost?: number;
+  /** Currency for cost/margin formatting. */
+  currency?: string;
 }
 
 const INACTIVE_COLOR = "#52525b";
@@ -62,6 +67,8 @@ export function SynapseNode({
   spotlight = false,
   onHover,
   reducedMotion = false,
+  cost,
+  currency = "USD",
 }: SynapseNodeProps) {
   const [hovered, setHovered] = useState(false);
   const [dragging, setDragging] = useState(false);
@@ -228,6 +235,26 @@ export function SynapseNode({
                   <span className="text-amber-300/90">★ {node.stars}</span>
                 )}
               </div>
+              {/* Cost / margin line (only when there's billing or revenue data). */}
+              {(cost != null || node.revenue != null) && (
+                <div className="mt-1 flex items-center justify-center gap-2 text-[10px]">
+                  {cost != null && (
+                    <span className="text-lime-300/70">
+                      {formatCost(cost, currency)}
+                    </span>
+                  )}
+                  {node.revenue != null && (
+                    <span
+                      style={{
+                        color:
+                          node.revenue - (cost ?? 0) >= 0 ? "#a3d94a" : "#f87171",
+                      }}
+                    >
+                      margen {formatCost(node.revenue - (cost ?? 0), currency)}
+                    </span>
+                  )}
+                </div>
+              )}
             </motion.div>
           )}
         </AnimatePresence>

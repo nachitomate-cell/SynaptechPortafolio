@@ -5,7 +5,9 @@ import { useProjectStore } from "../store/projectStore";
 import { accentForCategory } from "../data/categories";
 import { useElementSize } from "../hooks/useElementSize";
 import { useBilling } from "../hooks/useBilling";
+import { useBillingTrend } from "../hooks/useBillingTrend";
 import { usePush } from "../hooks/usePush";
+import { usePortfolioSync } from "../hooks/usePortfolioSync";
 import { gcpProjectFor, formatCost } from "../data/gcpProjects";
 import {
   useRadialLayout,
@@ -125,6 +127,8 @@ export function SynapseDashboard() {
 
   // Live GCP month-to-date billing, keyed by frontend node id (see useBilling).
   const billing = useBilling();
+  // Daily spend series + end-of-month projection for the trend panel.
+  const billingTrend = useBillingTrend();
   // Formatted cost for a single node ("$12.40"), or undefined when unknown.
   const costLabel = (nodeId: string): string | undefined => {
     const c = billing.byNode[nodeId];
@@ -155,6 +159,11 @@ export function SynapseDashboard() {
   // A shared link shows a read-only snapshot without touching the user's data.
   const shared = sharedProjects !== null;
   const projects = sharedProjects ?? storeProjects;
+
+  // Server sync: load the portfolio from the server on every device, and (when
+  // an edit token is set) save changes back. Disabled in shared/read-only mode.
+  const [editToken, setEditToken] = useLocalStorage("synaptech-edit-token", "");
+  const syncStatus = usePortfolioSync(editToken, !shared);
 
   // On first load, hydrate a shared portfolio from the URL (?s=…).
   useEffect(() => {
@@ -480,6 +489,13 @@ export function SynapseDashboard() {
   };
 
   const activeCount = projects.filter((p) => p.active !== false).length;
+
+  // Portfolio profitability: total monthly revenue vs the live GCP spend.
+  const totalRevenue = projects.reduce((s, p) => s + (p.revenue ?? 0), 0);
+  const profitability =
+    totalRevenue > 0
+      ? { revenue: totalRevenue, cost: billing.total, currency: billing.currency }
+      : null;
 
   const zoomIn = () => setZoom((z) => clampZoom(z + ZOOM_STEP));
   const zoomOut = () => setZoom((z) => clampZoom(z - ZOOM_STEP));
@@ -820,6 +836,8 @@ export function SynapseDashboard() {
                     onHover={setHoverId}
                     reducedMotion={lowMotion}
                     readOnly={presentation}
+                    cost={billing.byNode[node.id]}
+                    currency={billing.currency}
                     {...nodeHandlers}
                   />
                 ))}
@@ -905,6 +923,8 @@ export function SynapseDashboard() {
                     onHover={setHoverId}
                     reducedMotion={lowMotion}
                     readOnly={presentation}
+                    cost={billing.byNode[node.id]}
+                    currency={billing.currency}
                     {...nodeHandlers}
                   />
                 ))}
@@ -998,6 +1018,11 @@ export function SynapseDashboard() {
         onExport={exportJSON}
         onImport={importJSON}
         onShare={shareLink}
+        billingTrend={billingTrend.trend}
+        profitability={profitability}
+        syncStatus={syncStatus}
+        editToken={editToken}
+        onSetEditToken={setEditToken}
         onRefreshGitHub={refreshGitHub}
         ghBusy={ghBusy}
         shared={shared}
@@ -1042,6 +1067,8 @@ export function SynapseDashboard() {
         project={infoProject}
         accent={accentForCategory(infoProject?.category)}
         allProjects={projects}
+        gcpCost={infoProject ? billing.byNode[infoProject.id] : undefined}
+        currency={billing.currency}
         readOnly={presentation}
         onClose={() => setInfoId(null)}
         onRepoChange={(id, url) => updateProject(id, { repoUrl: url })}

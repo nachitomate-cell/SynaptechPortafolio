@@ -42,7 +42,7 @@ function ensureVapid(): void {
 }
 
 let redis: Redis | null = null;
-function getRedis(): Redis {
+export function getRedis(): Redis {
   if (redis) return redis;
   const url =
     process.env.UPSTASH_REDIS_REST_URL || process.env.KV_REST_API_URL;

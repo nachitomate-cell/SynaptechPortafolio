@@ -29,6 +29,11 @@ export interface SynapseProject {
   imageUrl?: string;
   demoUrl?: string;
   highlights?: string[];
+  /**
+   * Monthly income this project bills the client, in the billing currency
+   * (same as GCP). Used to compute margin = revenue − GCP cost.
+   */
+  revenue?: number;
 }
 
 /**

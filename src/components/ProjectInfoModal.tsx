@@ -3,12 +3,16 @@ import { AnimatePresence, motion } from "framer-motion";
 import type { SynapseProject } from "../types";
 import { PROJECT_STATUSES, statusMeta } from "../data/statuses";
 import type { ProjectStatus } from "../data/statuses";
+import { formatCost } from "../data/gcpProjects";
 
 interface ProjectInfoModalProps {
   project: SynapseProject | null;
   accent: string;
   /** Other projects, for the connection picker. */
   allProjects: SynapseProject[];
+  /** This project's month-to-date GCP cost, for the margin calc. */
+  gcpCost?: number;
+  currency?: string;
   /** Read-only (presentation) mode hides the editing inputs. */
   readOnly?: boolean;
   onClose: () => void;
@@ -55,6 +59,8 @@ export function ProjectInfoModal({
   project,
   accent,
   allProjects,
+  gcpCost,
+  currency = "USD",
   readOnly = false,
   onClose,
   onRepoChange,
@@ -217,6 +223,71 @@ export function ProjectInfoModal({
                     </option>
                   ))}
                 </select>
+              </div>
+            )}
+
+            {/* Profitability: monthly revenue vs GCP cost → margin. */}
+            {(!readOnly || project.revenue != null) && (
+              <div className="mt-5">
+                <label className="mb-1 block text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                  Rentabilidad (mes)
+                </label>
+                {!readOnly && (
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    value={project.revenue ?? ""}
+                    onChange={(e) => {
+                      const v = e.target.value.trim();
+                      const n = v === "" ? undefined : Number(v);
+                      onPatch(project.id, {
+                        revenue: n != null && Number.isFinite(n) ? n : undefined,
+                      });
+                    }}
+                    placeholder={`Ingreso mensual (en ${currency})`}
+                    className="w-full rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-200 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
+                  />
+                )}
+                <div className="mt-2 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-lg bg-zinc-950/40 py-2">
+                    <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Ingreso
+                    </div>
+                    <div className="text-sm font-semibold tabular-nums text-zinc-200">
+                      {project.revenue != null
+                        ? formatCost(project.revenue, currency)
+                        : "—"}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-zinc-950/40 py-2">
+                    <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Costo nube
+                    </div>
+                    <div className="text-sm font-semibold tabular-nums text-zinc-200">
+                      {gcpCost != null ? formatCost(gcpCost, currency) : "—"}
+                    </div>
+                  </div>
+                  <div className="rounded-lg bg-zinc-950/40 py-2">
+                    <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                      Margen
+                    </div>
+                    <div
+                      className="text-sm font-semibold tabular-nums"
+                      style={{
+                        color:
+                          project.revenue == null
+                            ? "#a1a1aa"
+                            : project.revenue - (gcpCost ?? 0) >= 0
+                              ? "#a3d94a"
+                              : "#f87171",
+                      }}
+                    >
+                      {project.revenue != null
+                        ? formatCost(project.revenue - (gcpCost ?? 0), currency)
+                        : "—"}
+                    </div>
+                  </div>
+                </div>
               </div>
             )}
 

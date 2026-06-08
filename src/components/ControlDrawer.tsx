@@ -1,9 +1,13 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { SynapseProject } from "../types";
 import { DEFAULT_CATEGORIES } from "../data/categories";
 import { PROJECT_STATUSES } from "../data/statuses";
 import type { ProjectStatus } from "../data/statuses";
+import { formatCost } from "../data/gcpProjects";
+import { Sparkline } from "./Sparkline";
+import type { BillingTrend } from "../hooks/useBillingTrend";
+import type { SyncStatus } from "../hooks/usePortfolioSync";
 
 interface ControlDrawerProps {
   open: boolean;
@@ -25,6 +29,14 @@ interface ControlDrawerProps {
   onExport: () => void;
   onImport: (file: File) => void;
   onShare: () => void;
+  /** GCP daily spend trend + projection (null while loading or on error). */
+  billingTrend: BillingTrend | null;
+  /** Portfolio profitability (null when no revenue has been entered). */
+  profitability: { revenue: number; cost: number; currency: string } | null;
+  // Server sync of the portfolio.
+  syncStatus: SyncStatus;
+  editToken: string;
+  onSetEditToken: (token: string) => void;
   onRefreshGitHub: () => void;
   ghBusy: boolean;
   /** When viewing a shared link, editing actions are hidden. */
@@ -105,6 +117,11 @@ export function ControlDrawer({
   onExport,
   onImport,
   onShare,
+  billingTrend,
+  profitability,
+  syncStatus,
+  editToken,
+  onSetEditToken,
   onRefreshGitHub,
   ghBusy,
   shared,
@@ -131,6 +148,16 @@ export function ControlDrawer({
   onTestPush,
 }: ControlDrawerProps) {
   const fileRef = useRef<HTMLInputElement>(null);
+  const [tokenInput, setTokenInput] = useState("");
+
+  const SYNC_META: Record<SyncStatus, { label: string; color: string }> = {
+    loading: { label: "Cargando…", color: "#a1a1aa" },
+    saving: { label: "Guardando…", color: "#fbbf24" },
+    synced: { label: "Sincronizado en la nube", color: "#a3d94a" },
+    local: { label: "Solo en este dispositivo", color: "#a1a1aa" },
+    error: { label: "Error al guardar", color: "#f87171" },
+  };
+  const sync = SYNC_META[syncStatus];
 
   const total = projects.length;
   const active = projects.filter((p) => p.active !== false).length;
@@ -302,6 +329,83 @@ export function ControlDrawer({
                 </div>
               </div>
 
+              {/* GCP spend trend + end-of-month projection. */}
+              {billingTrend && billingTrend.series.length > 0 && (
+                <div className="rounded-xl border border-white/5 bg-zinc-950/40 p-3">
+                  <div className="mb-2 flex items-baseline justify-between">
+                    <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                      Gasto en la nube
+                    </span>
+                    <span className="text-xs font-semibold tabular-nums text-lime-300">
+                      {formatCost(billingTrend.total, billingTrend.currency)}
+                    </span>
+                  </div>
+                  <Sparkline
+                    values={billingTrend.series.map((p) => p.cumulative)}
+                    projected={billingTrend.projectedTotal}
+                    width={244}
+                    height={46}
+                  />
+                  <div className="mt-2 flex items-center justify-between text-[10px] text-zinc-500">
+                    <span>
+                      Día {billingTrend.daysElapsed}/{billingTrend.daysInMonth}
+                    </span>
+                    <span>
+                      Proyección fin de mes:{" "}
+                      <span className="font-semibold text-lime-300/80">
+                        {formatCost(billingTrend.projectedTotal, billingTrend.currency)}
+                      </span>
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Portfolio profitability. */}
+              {profitability && (
+                <div className="rounded-xl border border-white/5 bg-zinc-950/40 p-3">
+                  <div className="mb-2 text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                    Rentabilidad (mes)
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 text-center">
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                        Ingresos
+                      </div>
+                      <div className="text-sm font-semibold tabular-nums text-zinc-200">
+                        {formatCost(profitability.revenue, profitability.currency)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                        Costo nube
+                      </div>
+                      <div className="text-sm font-semibold tabular-nums text-zinc-200">
+                        {formatCost(profitability.cost, profitability.currency)}
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-[9px] uppercase tracking-wider text-zinc-500">
+                        Margen
+                      </div>
+                      <div
+                        className="text-sm font-semibold tabular-nums"
+                        style={{
+                          color:
+                            profitability.revenue - profitability.cost >= 0
+                              ? "#a3d94a"
+                              : "#f87171",
+                        }}
+                      >
+                        {formatCost(
+                          profitability.revenue - profitability.cost,
+                          profitability.currency,
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
               {/* Instagram posting reminders. */}
               <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
                 <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
@@ -408,6 +512,57 @@ export function ControlDrawer({
                   </button>
                 )}
               </div>
+
+              {/* Server sync (cross-device persistence). */}
+              {!shared && (
+                <div className="flex flex-col gap-2 border-t border-white/5 pt-4">
+                  <span className="text-[11px] font-medium uppercase tracking-wider text-zinc-500">
+                    Sincronización
+                  </span>
+                  <div className="flex items-center gap-2 px-1 text-[11px] text-zinc-400">
+                    <span
+                      className="h-1.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: sync.color }}
+                    />
+                    {sync.label}
+                  </div>
+                  {editToken ? (
+                    <button
+                      onClick={() => onSetEditToken("")}
+                      className="flex items-center justify-between rounded-lg border border-lime-400/60 bg-lime-400/10 px-3 py-2 text-sm text-lime-200 transition-colors"
+                    >
+                      Edición en la nube activada
+                      <span className="text-[11px]">Desconectar</span>
+                    </button>
+                  ) : (
+                    <>
+                      <p className="px-1 text-[11px] font-light text-zinc-500">
+                        Ingresa tu token de edición para guardar cambios en la
+                        nube y verlos desde cualquier dispositivo.
+                      </p>
+                      <div className="flex gap-2">
+                        <input
+                          type="password"
+                          value={tokenInput}
+                          onChange={(e) => setTokenInput(e.target.value)}
+                          placeholder="Token de edición"
+                          className="min-w-0 flex-1 rounded-lg border border-white/5 bg-zinc-950/60 px-3 py-2 text-sm text-zinc-100 outline-none transition-colors placeholder:text-zinc-600 focus:border-lime-400/50"
+                        />
+                        <button
+                          onClick={() => {
+                            const t = tokenInput.trim();
+                            if (t) onSetEditToken(t);
+                            setTokenInput("");
+                          }}
+                          className="shrink-0 rounded-lg border border-white/10 px-3 py-2 text-sm text-zinc-300 transition-colors hover:border-lime-400/40 hover:text-lime-200"
+                        >
+                          Conectar
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
 
               {/* Actions. */}
               <div className="flex flex-col gap-2 border-t border-white/5 pt-4">

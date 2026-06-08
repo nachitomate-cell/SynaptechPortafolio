@@ -25,7 +25,8 @@ export default async function handler(
     await removeSubscription(endpoint);
     res.status(200).json({ ok: true });
   } catch (err) {
+    const detail = err instanceof Error ? err.message : "Unknown error";
     console.error("[/api/push/unsubscribe] failed:", err);
-    res.status(500).json({ error: "Failed to remove subscription" });
+    res.status(500).json({ error: "Failed to remove subscription", detail });
   }
 }

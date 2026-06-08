@@ -25,7 +25,8 @@ export default async function handler(
     });
     res.status(200).json({ ok: true, subscriptions: count, sent });
   } catch (err) {
+    const detail = err instanceof Error ? err.message : "Unknown error";
     console.error("[/api/push/test] failed:", err);
-    res.status(500).json({ error: "Failed to send test push" });
+    res.status(500).json({ error: "Failed to send test push", detail });
   }
 }

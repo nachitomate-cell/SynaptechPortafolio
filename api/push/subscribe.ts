@@ -25,7 +25,8 @@ export default async function handler(
     await saveSubscription(subscription);
     res.status(201).json({ ok: true });
   } catch (err) {
+    const detail = err instanceof Error ? err.message : "Unknown error";
     console.error("[/api/push/subscribe] failed:", err);
-    res.status(500).json({ error: "Failed to save subscription" });
+    res.status(500).json({ error: "Failed to save subscription", detail });
   }
 }

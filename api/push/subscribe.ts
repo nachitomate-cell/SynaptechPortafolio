@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { saveSubscription } from "../_lib/push";
+import { saveSubscription } from "../_lib/push.js";
 
 /**
  * POST /api/push/subscribe

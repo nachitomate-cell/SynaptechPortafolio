@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sendToAll, isAuthorizedCron, claimOnce } from "../_lib/push";
-import { getBilling } from "../_lib/billing-core";
+import { sendToAll, isAuthorizedCron, claimOnce } from "../_lib/push.js";
+import { getBilling } from "../_lib/billing-core.js";
 
 /**
  * Cron: GCP spend alert. Runs daily; when the month-to-date total crosses

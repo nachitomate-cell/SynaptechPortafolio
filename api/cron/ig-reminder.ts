@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sendToAll, isAuthorizedCron } from "../_lib/push";
+import { sendToAll, isAuthorizedCron } from "../_lib/push.js";
 
 /**
  * Cron: Instagram posting reminder. Scheduled in vercel.json for Mon/Thu/Sat;

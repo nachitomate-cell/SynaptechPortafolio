@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sendToAll, countSubscriptions } from "../_lib/push";
+import { sendToAll, countSubscriptions } from "../_lib/push.js";
 
 /**
  * POST /api/push/test

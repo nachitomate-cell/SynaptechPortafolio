@@ -1,5 +1,5 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { getBilling } from "./_lib/billing-core";
+import { getBilling } from "./_lib/billing-core.js";
 
 /**
  * GET /api/billing

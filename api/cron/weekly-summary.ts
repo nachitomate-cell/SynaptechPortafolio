@@ -1,7 +1,7 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
-import { sendToAll, isAuthorizedCron } from "../_lib/push";
-import { getBilling } from "../_lib/billing-core";
-import { INITIAL_PROJECTS } from "../../src/data/mockData";
+import { sendToAll, isAuthorizedCron } from "../_lib/push.js";
+import { getBilling } from "../_lib/billing-core.js";
+import { INITIAL_PROJECTS } from "../../src/data/mockData.js";
 
 /**
  * Cron: weekly portfolio summary. Pushes a one-line digest combining the static
